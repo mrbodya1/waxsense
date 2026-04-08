@@ -3,42 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaxCrowd</title>
+    <title>WaxCrowd | Краудсорс смазок</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .snowflake { font-size: 1.5rem; display: inline-block; cursor: pointer; transition: transform 0.1s; }
-        .snowflake:hover { transform: scale(1.2); }
-        .snowflake.active { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
-        .snowflake.inactive { color: #d1d5db; }
-        .tab-btn { transition: all 0.2s; }
-        .tab-btn.active { background: #fff; color: #2563eb; border-bottom: 2px solid #2563eb; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #2d5a7b 60%, #3b7a9e 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><circle cx="100" cy="100" r="150" fill="rgba(255,255,255,0.03)"/><circle cx="900" cy="200" r="200" fill="rgba(255,255,255,0.04)"/><circle cx="500" cy="500" r="250" fill="rgba(255,255,255,0.02)"/><circle cx="1100" cy="600" r="120" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+            opacity: 0.5;
+        }
+        .snowflake-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature-icon {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59,130,246,0.4);
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .report-card {
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
+        }
+        .report-card:hover {
+            border-color: #93c5fd;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .tab-btn.active {
+            background: white;
+            color: #2563eb;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <nav class="bg-white border-b">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
-            <div id="authSection"></div>
+    
+    <!-- Навигация -->
+    <nav class="bg-white/90 backdrop-blur-md border-b sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                ❄️ <span>WaxCrowd</span>
+            </a>
+            <div id="authSection" class="flex items-center gap-4"></div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Реальные отчёты лыжников</h1>
-            <p class="text-gray-600">Делись опытом и получай проверенные рекомендации</p>
-        </div>
+    <!-- HERO секция -->
+    <section class="hero-gradient text-white py-16 px-4 relative">
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-block mb-4 px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm border border-white/20">
+                ⚡ Краудсорс-платформа для лыжников
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                Правильная смазка —<br>
+                <span class="bg-gradient-to-r from-blue-300 to-cyan-200 bg-clip-text text-transparent">
+                    за 10 секунд
+                </span>
+            </h1>
+            <p class="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
+                Реальные отчёты лыжников о смазках и условиях катания. 
+                Никаких теоретических таблиц — только живой опыт сообщества 
+                для ваших конкретных условий.
+            </p>
+            
+            <!-- Кнопки действий -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <button id="heroFindWax" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center justify-center gap-2">
+                    🔍 Подобрать смазку
+                    <span class="text-sm opacity-70">(скоро)</span>
+                </button>
+                <a href="report.html" class="btn-secondary text-white px-8 py-4 rounded-xl text-lg font-medium inline-flex items-center justify-center gap-2">
+                    📝 Добавить отчёт
+                </a>
+            </div>
 
-        <div class="flex justify-center mb-8">
-            <a href="report.html" class="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition">
-                + Добавить отчёт
-            </a>
+            <!-- Мини-статистика -->
+            <div class="flex flex-wrap justify-center gap-6">
+                <div class="stat-card rounded-2xl px-6 py-3">
+                    <div class="text-3xl font-bold" id="heroReportsCount">0</div>
+                    <div class="text-sm text-blue-200">отчётов</div>
+                </div>
+                <div class="stat-card rounded-2xl px-6 py-3">
+                    <div class="text-3xl font-bold" id="heroLocationsCount">0</div>
+                    <div class="text-sm text-blue-200">трасс</div>
+                </div>
+                <div class="stat-card rounded-2xl px-6 py-3">
+                    <div class="text-3xl font-bold" id="heroUsersCount">0</div>
+                    <div class="text-sm text-blue-200">лыжников</div>
+                </div>
+            </div>
         </div>
+    </section>
 
-        <div id="reportsList" class="space-y-4">
-            <div class="text-center text-gray-500 py-8">Загрузка...</div>
+    <!-- Как это работает -->
+    <section class="py-16 px-4 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">
+                Как это работает
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-4xl">📝</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">1. Оставьте отчёт</h3>
+                    <p class="text-gray-600">Укажите погоду, лыжи и смазку — это займёт меньше минуты</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-4xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">2. Данные собираются</h3>
+                    <p class="text-gray-600">Система накапливает статистику по трассам и погоде</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span class="text-4xl">🎯</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">3. Получите подборку</h3>
+                    <p class="text-gray-600">Топ смазок для ваших условий на основе реального опыта</p>
+                </div>
+            </div>
         </div>
-    </main>
+    </section>
+
+    <!-- Последние отчёты + вкладки -->
+    <section class="py-12 px-4 bg-gray-50">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">📋 Последние отчёты</h2>
+                <div class="flex gap-2">
+                    <button id="filterAll" class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium bg-white shadow-sm">Все</button>
+                    <button id="filterGlide" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-white transition">⛷️ Скольжение</button>
+                    <button id="filterGrip" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-white transition">🎯 Держание</button>
+                </div>
+            </div>
+
+            <div id="reportsList" class="space-y-3">
+                <div class="text-center text-gray-500 py-12">Загрузка отчётов...</div>
+            </div>
+
+            <div class="text-center mt-8">
+                <a href="report.html" class="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700">
+                    + Добавить свой отчёт
+                    <span class="text-lg">→</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Почему нам доверяют -->
+    <section class="py-16 px-4 bg-white">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">
+                Почему это работает
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">🎿</div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-1">Учитываем тип лыж</h3>
+                        <p class="text-gray-600">Одна и та же смазка по-разному работает на мягких и жёстких лыжах. Мы это учитываем.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">📍</div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-1">Локальные данные</h3>
+                        <p class="text-gray-600">Отчёты с конкретных трасс. Снег в Москве и Мурманске — разные вселенные.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">⏱️</div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-1">Реальное время</h3>
+                        <p class="text-gray-600">Данные обновляются каждый день. То, что работало вчера — работает сегодня.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">❄️</div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-1">Проверено лыжниками</h3>
+                        <p class="text-gray-600">Каждый отчёт можно оценить. Чем больше ❄️ — тем больше доверия.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA секция -->
+    <section class="py-16 px-4 hero-gradient text-white relative">
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+            <h2 class="text-3xl font-bold mb-4">Готовы поделиться опытом?</h2>
+            <p class="text-xl text-blue-100 mb-8">Присоединяйтесь к сообществу лыжников и помогайте другим выбирать правильную смазку</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="report.html" class="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 transition">
+                    📝 Добавить отчёт
+                </a>
+                <a href="auth.html" class="btn-secondary text-white px-8 py-4 rounded-xl text-lg font-medium">
+                    👤 Создать аккаунт
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="bg-gray-900 text-gray-400 py-8 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="mb-2">❄️ WaxCrowd — краудсорс-платформа для лыжников</p>
+            <p class="text-sm">© 2026 · Данные обновляются в реальном времени</p>
+        </div>
+    </footer>
 
     <script>
         (function() {
@@ -46,23 +267,23 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+            let currentFilter = 'all';
+            let allReports = [];
+
+            // Аутентификация
             async function updateAuthUI() {
                 const { data: { user } } = await supabase.auth.getUser();
                 const el = document.getElementById('authSection');
                 if (user) {
                     el.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <a href="profile.html" class="text-gray-600">👤 Профиль</a>
-                            <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">+ Отчёт</a>
-                            <button onclick="logout()" class="text-gray-500 text-sm">Выйти</button>
-                        </div>
+                        <a href="profile.html" class="text-gray-700 hover:text-blue-600 font-medium">👤 Профиль</a>
+                        <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">+ Отчёт</a>
+                        <button onclick="logout()" class="text-gray-500 text-sm hover:text-gray-700">Выйти</button>
                     `;
                 } else {
                     el.innerHTML = `
-                        <div class="flex gap-3">
-                            <a href="auth.html" class="text-gray-600">Вход</a>
-                            <a href="auth.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Регистрация</a>
-                        </div>
+                        <a href="auth.html" class="text-gray-700 hover:text-blue-600 font-medium">Вход</a>
+                        <a href="auth.html" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">Регистрация</a>
                     `;
                 }
             }
@@ -72,20 +293,44 @@
                 window.location.reload();
             };
 
+            // Загрузка отчётов
             async function loadReports() {
                 const { data: reports, error } = await supabase
                     .from('reports')
                     .select(`
                         id, report_type, start_date, country, city, location_name,
-                        air_temp, track_condition, rating, comment, snowflakes_total, snowflakes_count,
-                        profiles(username, full_name)
+                        air_temp, track_condition, snow_type, rating, comment, 
+                        snowflakes_total, snowflakes_count,
+                        profiles(username, full_name),
+                        wax_layers(wax_brand, wax_name)
                     `)
                     .order('created_at', { ascending: false })
-                    .limit(20);
+                    .limit(30);
 
+                if (error) {
+                    console.error('Ошибка загрузки:', error);
+                    document.getElementById('reportsList').innerHTML = '<div class="text-center text-gray-500 py-12">Ошибка загрузки</div>';
+                    return;
+                }
+
+                allReports = reports || [];
+                filterReports();
+                updateStats(reports);
+            }
+
+            function filterReports() {
+                const filtered = currentFilter === 'all' 
+                    ? allReports 
+                    : allReports.filter(r => r.report_type === currentFilter);
+                
+                renderReports(filtered);
+            }
+
+            function renderReports(reports) {
                 const container = document.getElementById('reportsList');
-                if (error || !reports?.length) {
-                    container.innerHTML = '<div class="text-center text-gray-500 py-8">Пока нет отчётов</div>';
+                
+                if (!reports.length) {
+                    container.innerHTML = '<div class="text-center text-gray-500 py-12">Пока нет отчётов. <a href="report.html" class="text-blue-600">Будьте первым!</a></div>';
                     return;
                 }
 
@@ -94,29 +339,41 @@
                     const author = r.profiles?.full_name || r.profiles?.username || 'Аноним';
                     const typeIcon = r.report_type === 'glide' ? '⛷️' : '🎯';
                     const typeName = r.report_type === 'glide' ? 'Скольжение' : 'Держание';
+                    const waxes = r.wax_layers?.map(l => l.wax_name).join(' + ') || '—';
 
                     return `
-                        <div class="bg-white rounded-xl p-5 shadow-sm border">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <span class="text-lg mr-2">${typeIcon}</span>
-                                    <span class="font-medium">${r.country}, ${r.city} — ${r.location_name}</span>
-                                    <span class="text-sm text-gray-500 ml-2">${new Date(r.start_date).toLocaleDateString('ru-RU')}</span>
-                                </div>
+                        <div class="report-card bg-white rounded-xl p-5">
+                            <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-gray-500">${author}</span>
+                                    <span class="text-xl">${typeIcon}</span>
+                                    <span class="font-medium text-gray-800">${r.country}, ${r.city}</span>
+                                    <span class="text-sm text-gray-500">— ${r.location_name}</span>
                                 </div>
+                                <span class="text-sm text-gray-500">${new Date(r.start_date).toLocaleDateString('ru-RU')}</span>
                             </div>
-                            <div class="grid grid-cols-3 gap-4 mb-3 text-sm">
-                                <div><span class="text-gray-500">Темп:</span> ${r.air_temp}°C</div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2 text-sm">
+                                <div><span class="text-gray-500">Темп:</span> <span class="font-medium">${r.air_temp}°C</span></div>
                                 <div><span class="text-gray-500">Трасса:</span> ${r.track_condition}</div>
+                                <div><span class="text-gray-500">Снег:</span> ${r.snow_type || '—'}</div>
                                 <div><span class="text-gray-500">Тип:</span> ${typeName}</div>
                             </div>
-                            ${r.comment ? `<p class="text-gray-700 mb-3">💬 ${r.comment}</p>` : ''}
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-yellow-500">${'❄️'.repeat(r.rating || 0)}${'⚪'.repeat(5 - (r.rating || 0))}</span>
-                                    <span class="text-sm text-gray-500">(${r.rating}/5)</span>
+                            
+                            <div class="mb-2">
+                                <span class="text-gray-500 text-sm">🧴 Смазка:</span>
+                                <span class="font-medium">${waxes}</span>
+                            </div>
+                            
+                            ${r.comment ? `<p class="text-gray-700 text-sm mb-3 bg-gray-50 p-3 rounded-lg">💬 ${r.comment}</p>` : ''}
+                            
+                            <div class="flex flex-wrap justify-between items-center gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-yellow-500 text-lg">${'❄️'.repeat(r.rating || 0)}${'⚪'.repeat(5 - (r.rating || 0))}</span>
+                                        <span class="text-sm text-gray-600">(${r.rating}/5)</span>
+                                    </div>
+                                    <span class="text-gray-400">•</span>
+                                    <span class="text-sm text-gray-500">${author}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-blue-500">❄️ ${avg}</span>
@@ -128,6 +385,51 @@
                 }).join('');
             }
 
+            function updateStats(reports) {
+                const count = reports?.length || 0;
+                const locations = new Set(reports?.map(r => `${r.country}-${r.city}-${r.location_name}`)).size;
+                const users = new Set(reports?.map(r => r.profiles?.username)).size;
+                
+                document.getElementById('heroReportsCount').textContent = count;
+                document.getElementById('heroLocationsCount').textContent = locations;
+                document.getElementById('heroUsersCount').textContent = users;
+            }
+
+            // Обработчики фильтров
+            document.getElementById('filterAll').addEventListener('click', function() {
+                setActiveFilter(this, 'all');
+            });
+            document.getElementById('filterGlide').addEventListener('click', function() {
+                setActiveFilter(this, 'glide');
+            });
+            document.getElementById('filterGrip').addEventListener('click', function() {
+                setActiveFilter(this, 'grip');
+            });
+
+            function setActiveFilter(btn, filter) {
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-white', 'shadow-sm', 'text-blue-600');
+                    b.classList.add('text-gray-600');
+                });
+                btn.classList.add('active', 'bg-white', 'shadow-sm', 'text-blue-600');
+                btn.classList.remove('text-gray-600');
+                currentFilter = filter;
+                filterReports();
+            }
+
+            // Кнопка "Подобрать смазку" (пока не рабочая)
+            document.getElementById('heroFindWax').addEventListener('click', () => {
+                alert('🔜 Функция подбора смазки появится совсем скоро! А пока — посмотрите последние отчёты ниже.');
+                document.querySelector('#filterAll').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            // Realtime подписка
+            supabase
+                .channel('reports-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, loadReports)
+                .subscribe();
+
+            // Инициализация
             updateAuthUI();
             loadReports();
         })();
