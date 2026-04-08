@@ -3,225 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaxCrowd | Краудсорс смазок</title>
+    <title>WaxCrowd</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .snowflake { font-size: 1.5rem; display: inline-block; cursor: pointer; transition: transform 0.1s; }
+        .snowflake:hover { transform: scale(1.2); }
+        .snowflake.active { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .snowflake.inactive { color: #d1d5db; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { background: #fff; color: #2563eb; border-bottom: 2px solid #2563eb; }
+    </style>
 </head>
-<body class="bg-gradient-to-b from-blue-50 to-white min-h-screen">
-    
-    <!-- Навигация -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-blue-800">🏔️ WaxCrowd</h1>
-            <div id="authSection">
-                <!-- Заполняется через JS -->
-            </div>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
+            <div id="authSection"></div>
         </div>
     </nav>
 
-    <!-- Главный блок -->
-    <main class="max-w-4xl mx-auto px-4 py-12">
-        
-        <!-- Hero секция -->
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold text-gray-800 mb-4">
-                Реальные рекомендации смазок<br>от реальных лыжников
-            </h2>
-            <p class="text-xl text-gray-600 mb-8">
-                Краудсорс-платформа для обмена опытом. Учитываем тип лыж, погоду и состояние снега.
-            </p>
-            <a href="report.html" 
-               class="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-bold hover:bg-blue-700 transition">
-                + Добавить свой отчет
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Реальные отчёты лыжников</h1>
+            <p class="text-gray-600">Делись опытом и получай проверенные рекомендации</p>
+        </div>
+
+        <div class="flex justify-center mb-8">
+            <a href="report.html" class="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition">
+                + Добавить отчёт
             </a>
         </div>
 
-        <!-- Как это работает -->
-        <div class="grid md:grid-cols-3 gap-6 mb-12">
-            <div class="bg-white rounded-xl shadow p-6 text-center">
-                <div class="text-4xl mb-3">📝</div>
-                <h3 class="font-bold text-lg mb-2">1. Оставьте отчет</h3>
-                <p class="text-gray-600">Укажите погоду, лыжи и смазку, которую использовали</p>
-            </div>
-            <div class="bg-white rounded-xl shadow p-6 text-center">
-                <div class="text-4xl mb-3">📊</div>
-                <h3 class="font-bold text-lg mb-2">2. Данные накапливаются</h3>
-                <p class="text-gray-600">Система собирает статистику по трассам и условиям</p>
-            </div>
-            <div class="bg-white rounded-xl shadow p-6 text-center">
-                <div class="text-4xl mb-3">🎯</div>
-                <h3 class="font-bold text-lg mb-2">3. Получите рекомендации</h3>
-                <p class="text-gray-600">Топ смазок для ваших конкретных условий (скоро)</p>
-            </div>
+        <div id="reportsList" class="space-y-4">
+            <div class="text-center text-gray-500 py-8">Загрузка...</div>
         </div>
-
-        <!-- Последние отчеты -->
-        <div class="bg-white rounded-xl shadow p-6">
-            <h3 class="font-bold text-xl mb-4">📋 Последние отчеты</h3>
-            <div id="recentReports" class="space-y-3">
-                <div class="text-center text-gray-500 py-8">Загрузка...</div>
-            </div>
-        </div>
-
-        <!-- Статистика -->
-        <div class="mt-12 grid grid-cols-3 gap-4 text-center">
-            <div class="bg-white rounded-lg p-4">
-                <div class="text-3xl font-bold text-blue-600" id="totalReports">0</div>
-                <div class="text-gray-600">отчетов</div>
-            </div>
-            <div class="bg-white rounded-lg p-4">
-                <div class="text-3xl font-bold text-blue-600" id="totalLocations">0</div>
-                <div class="text-gray-600">трасс</div>
-            </div>
-            <div class="bg-white rounded-lg p-4">
-                <div class="text-3xl font-bold text-blue-600" id="totalUsers">0</div>
-                <div class="text-gray-600">лыжников</div>
-            </div>
-        </div>
-
     </main>
-
-    <!-- Футер -->
-    <footer class="border-t mt-16 py-6 text-center text-gray-500 text-sm">
-        WaxCrowd MVP • Данные обновляются в реальном времени
-    </footer>
 
     <script>
         (function() {
-            // Конфигурация Supabase (ОДИН РАЗ)
             const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // Проверка авторизации и отображение кнопок
             async function updateAuthUI() {
                 const { data: { user } } = await supabase.auth.getUser();
-                const authSection = document.getElementById('authSection');
-                
+                const el = document.getElementById('authSection');
                 if (user) {
-                    authSection.innerHTML = `
+                    el.innerHTML = `
                         <div class="flex items-center gap-4">
-                            <a href="profile.html" class="text-gray-600 hover:text-gray-800">👤 Профиль</a>
-                            <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
-                                + Отчет
-                            </a>
-                            <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">
-                                Выйти
-                            </button>
+                            <a href="profile.html" class="text-gray-600">👤 Профиль</a>
+                            <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">+ Отчёт</a>
+                            <button onclick="logout()" class="text-gray-500 text-sm">Выйти</button>
                         </div>
                     `;
                 } else {
-                    authSection.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <a href="auth.html" class="text-gray-600 hover:text-gray-800">Вход</a>
-                            <a href="auth.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                Регистрация
-                            </a>
+                    el.innerHTML = `
+                        <div class="flex gap-3">
+                            <a href="auth.html" class="text-gray-600">Вход</a>
+                            <a href="auth.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Регистрация</a>
                         </div>
                     `;
                 }
             }
 
-            // Выход
-            window.logout = async function() {
+            window.logout = async () => {
                 await supabase.auth.signOut();
                 window.location.reload();
             };
 
-            // Загрузка последних отчетов
-            async function loadRecentReports() {
+            async function loadReports() {
                 const { data: reports, error } = await supabase
                     .from('reports')
                     .select(`
-                        id,
-                        created_at,
-                        air_temp,
-                        rating,
-                        locations(city, track_name),
-                        ski_styles(name)
+                        id, report_type, start_date, country, city, location_name,
+                        air_temp, track_condition, rating, comment, snowflakes_total, snowflakes_count,
+                        profiles(username, full_name)
                     `)
                     .order('created_at', { ascending: false })
-                    .limit(5);
+                    .limit(20);
 
-                const container = document.getElementById('recentReports');
-                
-                if (error || !reports || reports.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center text-gray-500 py-8">
-                            Пока нет отчетов. <a href="report.html" class="text-blue-600 hover:underline">Будьте первым!</a>
-                        </div>
-                    `;
+                const container = document.getElementById('reportsList');
+                if (error || !reports?.length) {
+                    container.innerHTML = '<div class="text-center text-gray-500 py-8">Пока нет отчётов</div>';
                     return;
                 }
 
                 container.innerHTML = reports.map(r => {
-                    const date = new Date(r.created_at).toLocaleDateString('ru-RU');
-                    const location = r.locations ? `${r.locations.city} — ${r.locations.track_name}` : '—';
-                    const skiStyle = r.ski_styles?.name || '—';
-                    
+                    const avg = r.snowflakes_count > 0 ? (r.snowflakes_total / r.snowflakes_count).toFixed(1) : '—';
+                    const author = r.profiles?.full_name || r.profiles?.username || 'Аноним';
+                    const typeIcon = r.report_type === 'glide' ? '⛷️' : '🎯';
+                    const typeName = r.report_type === 'glide' ? 'Скольжение' : 'Держание';
+
                     return `
-                        <div class="border-b pb-3 last:border-0">
-                            <div class="flex justify-between items-start">
+                        <div class="bg-white rounded-xl p-5 shadow-sm border">
+                            <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <span class="font-medium">${location}</span>
-                                    <span class="text-sm text-gray-500 ml-2">${date}</span>
+                                    <span class="text-lg mr-2">${typeIcon}</span>
+                                    <span class="font-medium">${r.country}, ${r.city} — ${r.location_name}</span>
+                                    <span class="text-sm text-gray-500 ml-2">${new Date(r.start_date).toLocaleDateString('ru-RU')}</span>
                                 </div>
-                                <span class="text-yellow-500 font-bold">⭐ ${r.rating}/10</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-gray-500">${author}</span>
+                                </div>
                             </div>
-                            <div class="text-sm text-gray-600 mt-1">
-                                ${r.air_temp}°C • ${skiStyle}
+                            <div class="grid grid-cols-3 gap-4 mb-3 text-sm">
+                                <div><span class="text-gray-500">Темп:</span> ${r.air_temp}°C</div>
+                                <div><span class="text-gray-500">Трасса:</span> ${r.track_condition}</div>
+                                <div><span class="text-gray-500">Тип:</span> ${typeName}</div>
+                            </div>
+                            ${r.comment ? `<p class="text-gray-700 mb-3">💬 ${r.comment}</p>` : ''}
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-yellow-500">${'❄️'.repeat(r.rating || 0)}${'⚪'.repeat(5 - (r.rating || 0))}</span>
+                                    <span class="text-sm text-gray-500">(${r.rating}/5)</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-blue-500">❄️ ${avg}</span>
+                                    <span class="text-xs text-gray-400">(${r.snowflakes_count} оценок)</span>
+                                </div>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
 
-            // Загрузка статистики
-            async function loadStats() {
-                // Количество отчетов
-                const { count: reportsCount } = await supabase
-                    .from('reports')
-                    .select('*', { count: 'exact', head: true });
-                document.getElementById('totalReports').textContent = reportsCount || 0;
-
-                // Количество локаций
-                const { count: locationsCount } = await supabase
-                    .from('locations')
-                    .select('*', { count: 'exact', head: true });
-                document.getElementById('totalLocations').textContent = locationsCount || 0;
-
-                // Количество пользователей (по уникальным user_id в отчетах)
-                const { data: users } = await supabase
-                    .from('reports')
-                    .select('user_id');
-                
-                const uniqueUsers = users ? new Set(users.map(u => u.user_id)).size : 0;
-                document.getElementById('totalUsers').textContent = uniqueUsers;
-            }
-
-            // Подписка на реальное время
-            function subscribeToChanges() {
-                supabase
-                    .channel('reports-changes')
-                    .on('postgres_changes', 
-                        { event: 'INSERT', schema: 'public', table: 'reports' }, 
-                        () => {
-                            loadRecentReports();
-                            loadStats();
-                        }
-                    )
-                    .subscribe();
-            }
-
-            // Инициализация
-            async function init() {
-                await updateAuthUI();
-                await loadRecentReports();
-                await loadStats();
-                subscribeToChanges();
-            }
-
-            init();
+            updateAuthUI();
+            loadReports();
         })();
     </script>
 </body>
