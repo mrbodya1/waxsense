@@ -86,14 +86,15 @@
                     </div>
                     <div>
                         <label class="block text-sm mb-1">Модель</label>
-                        <input type="text" id="skiModel" 
-                               class="w-full border rounded p-2" 
-                               placeholder="Например: RCS Carbonlite">
+                        <select id="skiModel" class="w-full border rounded p-2">
+                            <option value="">Сначала выберите бренд</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm mb-1">Год выпуска</label>
-                        <input type="number" id="skiYear" min="2000" max="2026"
-                               class="w-full border rounded p-2">
+                        <select id="skiYear" class="w-full border rounded p-2">
+                            <option value="">Выберите...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm mb-1">Структура</label>
@@ -103,9 +104,9 @@
                     </div>
                     <div>
                         <label class="block text-sm mb-1">Тип базы</label>
-                        <input type="text" id="skiBase" 
-                               class="w-full border rounded p-2" 
-                               placeholder="Sintered / Extruded">
+                        <select id="skiBase" class="w-full border rounded p-2">
+                            <option value="">Сначала выберите бренд</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -200,7 +201,9 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // Загрузка справочников при старте
+            // =============================================
+            // ЗАГРУЗКА СПРАВОЧНИКОВ
+            // =============================================
             async function loadReferences() {
                 try {
                     // Локации
@@ -262,12 +265,84 @@
                             });
                         });
                     }
+
+                    // Годы выпуска (2001-2030)
+                    const yearSelect = document.getElementById('skiYear');
+                    for (let y = 2030; y >= 2001; y--) {
+                        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+                    }
+
                 } catch (err) {
                     console.error('Ошибка загрузки справочников:', err);
                 }
             }
 
-            // Отправка формы
+            // =============================================
+            // ЗАГРУЗКА МОДЕЛЕЙ ПРИ ВЫБОРЕ БРЕНДА
+            // =============================================
+            async function loadModels(brandId) {
+                const modelSelect = document.getElementById('skiModel');
+                modelSelect.innerHTML = '<option value="">Выберите...</option>';
+                
+                if (!brandId) {
+                    modelSelect.innerHTML = '<option value="">Сначала выберите бренд</option>';
+                    return;
+                }
+                
+                const { data: models } = await supabase
+                    .from('ski_models')
+                    .select('*')
+                    .eq('brand_id', brandId)
+                    .order('sort_order');
+                    
+                if (models && models.length > 0) {
+                    models.forEach(m => {
+                        modelSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+                    });
+                } else {
+                    modelSelect.innerHTML += `<option value="">Модели не найдены</option>`;
+                }
+            }
+
+            // =============================================
+            // ЗАГРУЗКА БАЗ ПРИ ВЫБОРЕ БРЕНДА
+            // =============================================
+            async function loadBases(brandId) {
+                const baseSelect = document.getElementById('skiBase');
+                baseSelect.innerHTML = '<option value="">Выберите...</option>';
+                
+                if (!brandId) {
+                    baseSelect.innerHTML = '<option value="">Сначала выберите бренд</option>';
+                    return;
+                }
+                
+                const { data: bases } = await supabase
+                    .from('ski_bases')
+                    .select('*')
+                    .eq('brand_id', brandId)
+                    .order('sort_order');
+                    
+                if (bases && bases.length > 0) {
+                    bases.forEach(b => {
+                        baseSelect.innerHTML += `<option value="${b.id}">${b.name} (${b.temp_range || 'Universal'})</option>`;
+                    });
+                } else {
+                    baseSelect.innerHTML += `<option value="">Базы не найдены</option>`;
+                }
+            }
+
+            // =============================================
+            // ОБРАБОТЧИК ВЫБОРА БРЕНДА
+            // =============================================
+            document.getElementById('skiBrand').addEventListener('change', (e) => {
+                const brandId = e.target.value;
+                loadModels(brandId);
+                loadBases(brandId);
+            });
+
+            // =============================================
+            // ОТПРАВКА ФОРМЫ
+            // =============================================
             document.getElementById('reportForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -302,10 +377,10 @@
                     snow_type_ids: snowTypeIds,
                     ski_style_id: document.getElementById('skiStyle').value,
                     ski_brand_id: document.getElementById('skiBrand').value,
-                    ski_model: document.getElementById('skiModel').value,
+                    ski_model_id: document.getElementById('skiModel').value || null,
                     ski_year: document.getElementById('skiYear').value ? parseInt(document.getElementById('skiYear').value) : null,
                     ski_structure_id: document.getElementById('skiStructure').value || null,
-                    ski_base: document.getElementById('skiBase').value,
+                    ski_base_id: document.getElementById('skiBase').value || null,
                     rating: parseInt(document.getElementById('rating').value),
                     notes: document.getElementById('notes').value
                 };
@@ -357,7 +432,10 @@
                 }
 
                 if (waxLayers.length > 0) {
-                    await supabase.from('wax_layers').insert(waxLayers);
+                    const { error: waxError } = await supabase.from('wax_layers').insert(waxLayers);
+                    if (waxError) {
+                        console.error('Ошибка сохранения слоев смазки:', waxError);
+                    }
                 }
 
                 document.getElementById('message').innerHTML = 
@@ -368,7 +446,9 @@
                 }, 1500);
             });
 
-            // Загрузка при старте
+            // =============================================
+            // ЗАПУСК ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+            // =============================================
             loadReferences();
         })();
     </script>
