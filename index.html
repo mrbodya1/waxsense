@@ -59,7 +59,6 @@
         <div class="bg-white rounded-xl shadow p-6">
             <h3 class="font-bold text-xl mb-4">📋 Последние отчеты</h3>
             <div id="recentReports" class="space-y-3">
-                <!-- Заполняется через JS -->
                 <div class="text-center text-gray-500 py-8">Загрузка...</div>
             </div>
         </div>
@@ -88,136 +87,142 @@
     </footer>
 
     <script>
-        // Конфигурация Supabase
-        const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        (function() {
+            // Конфигурация Supabase (ОДИН РАЗ)
+            const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Проверка авторизации и отображение кнопок
-        async function updateAuthUI() {
-            const { data: { user } } = await supabase.auth.getUser();
-            const authSection = document.getElementById('authSection');
-            
-            if (user) {
-                authSection.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <span class="text-sm text-gray-600">${user.email}</span>
-                        <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
-                            + Отчет
-                        </a>
-                        <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">
-                            Выйти
-                        </button>
-                    </div>
-                `;
-            } else {
-                authSection.innerHTML = `
-                    <a href="login.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Войти
-                    </a>
-                `;
-            }
-        }
-
-        // Выход
-        window.logout = async function() {
-            await supabase.auth.signOut();
-            window.location.reload();
-        };
-
-        // Загрузка последних отчетов
-        async function loadRecentReports() {
-            const { data: reports, error } = await supabase
-                .from('reports')
-                .select(`
-                    id,
-                    created_at,
-                    air_temp,
-                    rating,
-                    locations(city, track_name),
-                    ski_styles(name),
-                    wax_layers(wax_name, wax_brands(name))
-                `)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            const container = document.getElementById('recentReports');
-            
-            if (error || !reports || reports.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-8">
-                        Пока нет отчетов. <a href="report.html" class="text-blue-600">Будьте первым!</a>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = reports.map(r => {
-                const date = new Date(r.created_at).toLocaleDateString('ru-RU');
-                const location = r.locations ? `${r.locations.city} — ${r.locations.track_name}` : '—';
-                const skiStyle = r.ski_styles?.name || '—';
-                const waxes = r.wax_layers?.map(w => w.wax_name).join(' + ') || 'не указана';
+            // Проверка авторизации и отображение кнопок
+            async function updateAuthUI() {
+                const { data: { user } } = await supabase.auth.getUser();
+                const authSection = document.getElementById('authSection');
                 
-                return `
-                    <div class="border-b pb-3 last:border-0">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="font-medium">${location}</span>
-                                <span class="text-sm text-gray-500 ml-2">${date}</span>
+                if (user) {
+                    authSection.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <a href="profile.html" class="text-gray-600 hover:text-gray-800">👤 Профиль</a>
+                            <a href="report.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                                + Отчет
+                            </a>
+                            <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm">
+                                Выйти
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    authSection.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <a href="auth.html" class="text-gray-600 hover:text-gray-800">Вход</a>
+                            <a href="auth.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                Регистрация
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+
+            // Выход
+            window.logout = async function() {
+                await supabase.auth.signOut();
+                window.location.reload();
+            };
+
+            // Загрузка последних отчетов
+            async function loadRecentReports() {
+                const { data: reports, error } = await supabase
+                    .from('reports')
+                    .select(`
+                        id,
+                        created_at,
+                        air_temp,
+                        rating,
+                        locations(city, track_name),
+                        ski_styles(name)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                const container = document.getElementById('recentReports');
+                
+                if (error || !reports || reports.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            Пока нет отчетов. <a href="report.html" class="text-blue-600 hover:underline">Будьте первым!</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = reports.map(r => {
+                    const date = new Date(r.created_at).toLocaleDateString('ru-RU');
+                    const location = r.locations ? `${r.locations.city} — ${r.locations.track_name}` : '—';
+                    const skiStyle = r.ski_styles?.name || '—';
+                    
+                    return `
+                        <div class="border-b pb-3 last:border-0">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-medium">${location}</span>
+                                    <span class="text-sm text-gray-500 ml-2">${date}</span>
+                                </div>
+                                <span class="text-yellow-500 font-bold">⭐ ${r.rating}/10</span>
                             </div>
-                            <span class="text-yellow-500 font-bold">⭐ ${r.rating}/10</span>
+                            <div class="text-sm text-gray-600 mt-1">
+                                ${r.air_temp}°C • ${skiStyle}
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-600 mt-1">
-                            ${r.air_temp}°C • ${skiStyle} • ${waxes}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+                    `;
+                }).join('');
+            }
 
-        // Загрузка статистики
-        async function loadStats() {
-            // Количество отчетов
-            const { count: reportsCount } = await supabase
-                .from('reports')
-                .select('*', { count: 'exact', head: true });
-            document.getElementById('totalReports').textContent = reportsCount || 0;
+            // Загрузка статистики
+            async function loadStats() {
+                // Количество отчетов
+                const { count: reportsCount } = await supabase
+                    .from('reports')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalReports').textContent = reportsCount || 0;
 
-            // Количество локаций
-            const { count: locationsCount } = await supabase
-                .from('locations')
-                .select('*', { count: 'exact', head: true });
-            document.getElementById('totalLocations').textContent = locationsCount || 0;
+                // Количество локаций
+                const { count: locationsCount } = await supabase
+                    .from('locations')
+                    .select('*', { count: 'exact', head: true });
+                document.getElementById('totalLocations').textContent = locationsCount || 0;
 
-            // Количество пользователей (приблизительно, по уникальным user_id в отчетах)
-            const { data: users } = await supabase
-                .from('reports')
-                .select('user_id');
-            
-            const uniqueUsers = users ? new Set(users.map(u => u.user_id)).size : 0;
-            document.getElementById('totalUsers').textContent = uniqueUsers;
-        }
+                // Количество пользователей (по уникальным user_id в отчетах)
+                const { data: users } = await supabase
+                    .from('reports')
+                    .select('user_id');
+                
+                const uniqueUsers = users ? new Set(users.map(u => u.user_id)).size : 0;
+                document.getElementById('totalUsers').textContent = uniqueUsers;
+            }
 
-        // Инициализация
-        async function init() {
-            await updateAuthUI();
-            await loadRecentReports();
-            await loadStats();
-            
-            // Подписка на изменения в реальном времени
-            supabase
-                .channel('reports-changes')
-                .on('postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'reports' }, 
-                    () => {
-                        loadRecentReports();
-                        loadStats();
-                    }
-                )
-                .subscribe();
-        }
+            // Подписка на реальное время
+            function subscribeToChanges() {
+                supabase
+                    .channel('reports-changes')
+                    .on('postgres_changes', 
+                        { event: 'INSERT', schema: 'public', table: 'reports' }, 
+                        () => {
+                            loadRecentReports();
+                            loadStats();
+                        }
+                    )
+                    .subscribe();
+            }
 
-        init();
+            // Инициализация
+            async function init() {
+                await updateAuthUI();
+                await loadRecentReports();
+                await loadStats();
+                subscribeToChanges();
+            }
+
+            init();
+        })();
     </script>
 </body>
 </html>
