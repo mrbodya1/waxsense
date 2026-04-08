@@ -3,53 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль | WaxCrowd</title>
+    <title>Новый отчёт | WaxCrowd</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
+        .snowflake-rating { font-size: 2rem; cursor: pointer; transition: transform 0.1s; }
+        .snowflake-rating:hover { transform: scale(1.15); }
+        .snowflake-rating.active { color: #3b82f6; }
+        .snowflake-rating.inactive { color: #d1d5db; }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="max-w-4xl mx-auto px-4 py-3">
             <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
-            <div class="flex gap-4">
-                <a href="index.html" class="text-gray-600">Главная</a>
-                <a href="report.html" class="text-gray-600">Добавить</a>
-                <button onclick="logout()" class="text-red-600">Выйти</button>
-            </div>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <div class="flex items-center gap-4">
-                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-3xl">👤</div>
-                <div class="flex-1">
-                    <h1 class="text-2xl font-bold" id="profileName"></h1>
-                    <p class="text-gray-600" id="profileEmail"></p>
-                    <p class="text-sm text-gray-500">Отчётов: <span id="reportsCount">0</span></p>
-                </div>
-                <button onclick="toggleEdit()" class="border px-4 py-2 rounded-xl">✏️ Редактировать</button>
+    <main class="max-w-2xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            
+            <!-- Вкладки -->
+            <div class="flex border-b mb-6">
+                <button id="tabGlide" class="tab-btn active flex-1">⛷️ Скольжение</button>
+                <button id="tabGrip" class="tab-btn flex-1">🎯 Держание</button>
             </div>
-        </div>
 
-        <div id="editForm" class="bg-white rounded-2xl shadow-lg p-6 mb-6 hidden">
-            <h2 class="font-bold mb-4">Редактирование</h2>
-            <form id="profileForm" class="space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="text" id="username" placeholder="Имя пользователя" class="border rounded-xl p-2">
-                    <input type="text" id="fullName" placeholder="Полное имя" class="border rounded-xl p-2">
-                    <input type="text" id="city" placeholder="Город" class="border rounded-xl p-2">
+            <form id="reportForm">
+                <input type="hidden" id="reportType" value="glide">
+
+                <!-- Обязательные поля -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Дата старта</label>
+                            <input type="date" id="startDate" required class="w-full border rounded-xl p-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Страна</label>
+                            <input type="text" id="country" placeholder="Россия" required class="w-full border rounded-xl p-3">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Город</label>
+                            <input type="text" id="city" placeholder="Москва" required class="w-full border rounded-xl p-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Место старта</label>
+                            <input type="text" id="locationName" placeholder="Лужники" required class="w-full border rounded-xl p-3">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Температура воздуха: <span id="airTempValue">-5</span>°C</label>
+                        <input type="range" id="airTemp" min="-30" max="15" value="-5" step="1" class="w-full">
+                        <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Состояние <span id="trackLabel">трассы</span>: <span id="trackValue">Жесткая</span></label>
+                        <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
+                        </div>
+                    </div>
                 </div>
-                <textarea id="bio" placeholder="О себе" rows="3" class="w-full border rounded-xl p-2"></textarea>
-                <div class="flex gap-3">
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-xl">Сохранить</button>
-                    <button type="button" onclick="toggleEdit()" class="border px-6 py-2 rounded-xl">Отмена</button>
+
+                <!-- Спойлер "Дополнительно" -->
+                <div class="mt-4">
+                    <button type="button" id="toggleDetails" class="text-blue-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
                 </div>
+
+                <div id="detailsSection" class="hidden space-y-4 mt-4 pt-4 border-t">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div><label class="block text-sm mb-1">Темп. снега</label><input type="number" id="snowTemp" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Влажность %</label><input type="number" id="humidity" min="0" max="100" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Давление</label><input type="number" id="pressure" class="w-full border rounded-xl p-2"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Тип снега: <span id="snowTypeValue">Мелкозернистый</span></label>
+                        <input type="range" id="snowType" min="1" max="6" value="2" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>Свежий</span><span>Мелкозерн</span><span>Старый</span><span>Мокрый</span><span>Подмерз</span><span>Искусств</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm mb-1">Бренд лыж</label><input type="text" id="skiBrand" placeholder="Fischer" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Модель</label><input type="text" id="skiModel" placeholder="Speedmax" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">База (эпюра)</label><input type="text" id="skiBase" placeholder="28 / A5" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Структура</label><input type="text" id="skiStructure" placeholder="P5-1" class="w-full border rounded-xl p-2"></div>
+                    </div>
+                </div>
+
+                <!-- Слои смазки -->
+                <div class="mt-6 pt-4 border-t">
+                    <h3 class="font-medium mb-3" id="waxSectionTitle">🧴 Смазка (скольжение)</h3>
+                    <div id="waxLayers"></div>
+                    <button type="button" id="addLayer" class="mt-3 text-blue-600 text-sm">+ Добавить слой</button>
+                </div>
+
+                <!-- Оценка и комментарий -->
+                <div class="mt-6 pt-4 border-t">
+                    <label class="block text-sm font-medium mb-2">⭐ Ваша оценка работы смазки</label>
+                    <div id="ratingStars" class="flex gap-2 mb-4">
+                        <span data-rating="1" class="snowflake-rating inactive">❄️</span>
+                        <span data-rating="2" class="snowflake-rating inactive">❄️</span>
+                        <span data-rating="3" class="snowflake-rating inactive">❄️</span>
+                        <span data-rating="4" class="snowflake-rating inactive">❄️</span>
+                        <span data-rating="5" class="snowflake-rating inactive">❄️</span>
+                    </div>
+                    <input type="hidden" id="rating" value="0">
+
+                    <label class="block text-sm font-medium mb-1">💬 Комментарий</label>
+                    <textarea id="comment" rows="3" class="w-full border rounded-xl p-3" placeholder="Нюансы нанесения, ощущения..."></textarea>
+                </div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">💾 Сохранить отчёт</button>
+                    <button type="button" onclick="window.location.href='index.html'" class="px-6 py-3 border rounded-xl hover:bg-gray-50">Отмена</button>
+                </div>
+                <div id="message" class="text-center text-sm mt-3"></div>
             </form>
         </div>
-
-        <h2 class="text-xl font-bold mb-4">📋 Мои отчёты</h2>
-        <div id="userReports" class="space-y-3"></div>
     </main>
 
     <script>
@@ -58,77 +139,188 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            let currentUser = null;
-            let currentProfile = null;
+            let currentRating = 0;
+            let layerCount = 1;
+            const trackConditions = ['Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
+            const snowTypes = ['Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
 
-            async function init() {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) { window.location.href = 'auth.html'; return; }
-                currentUser = user;
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
 
-                const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-                if (!profile) {
-                    await supabase.from('profiles').insert({ id: user.id, username: user.email, full_name: user.email });
-                    currentProfile = { username: user.email, full_name: user.email };
-                } else {
-                    currentProfile = profile;
-                }
+            const tabGlide = document.getElementById('tabGlide');
+            const tabGrip = document.getElementById('tabGrip');
+            const reportType = document.getElementById('reportType');
+            const trackLabel = document.getElementById('trackLabel');
+            const waxTitle = document.getElementById('waxSectionTitle');
 
-                document.getElementById('profileName').textContent = currentProfile.full_name || currentProfile.username;
-                document.getElementById('profileEmail').textContent = user.email;
-                document.getElementById('reportsCount').textContent = currentProfile.reports_count || 0;
-
-                document.getElementById('username').value = currentProfile.username || '';
-                document.getElementById('fullName').value = currentProfile.full_name || '';
-                document.getElementById('city').value = currentProfile.city || '';
-                document.getElementById('bio').value = currentProfile.bio || '';
-
-                loadUserReports();
-            }
-
-            window.toggleEdit = () => document.getElementById('editForm').classList.toggle('hidden');
-
-            document.getElementById('profileForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const updates = {
-                    username: document.getElementById('username').value,
-                    full_name: document.getElementById('fullName').value,
-                    city: document.getElementById('city').value,
-                    bio: document.getElementById('bio').value
-                };
-                await supabase.from('profiles').update(updates).eq('id', currentUser.id);
-                location.reload();
+            tabGlide.addEventListener('click', () => {
+                tabGlide.classList.add('active');
+                tabGrip.classList.remove('active');
+                reportType.value = 'glide';
+                trackLabel.textContent = 'трассы';
+                waxTitle.textContent = '🧴 Смазка (скольжение)';
+                updateLayerLabels();
             });
 
-            async function loadUserReports() {
-                const { data: reports } = await supabase
-                    .from('reports')
-                    .select('id, report_type, start_date, country, city, location_name, air_temp, track_condition, rating, comment')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
+            tabGrip.addEventListener('click', () => {
+                tabGrip.classList.add('active');
+                tabGlide.classList.remove('active');
+                reportType.value = 'grip';
+                trackLabel.textContent = 'лыжни';
+                waxTitle.textContent = '🎯 Смазка (держание)';
+                updateLayerLabels();
+            });
 
-                const container = document.getElementById('userReports');
-                if (!reports?.length) {
-                    container.innerHTML = '<div class="text-gray-500 text-center py-8">Нет отчётов</div>';
+            const airTemp = document.getElementById('airTemp');
+            const airTempValue = document.getElementById('airTempValue');
+            airTemp.addEventListener('input', () => airTempValue.textContent = airTemp.value);
+
+            const trackSlider = document.getElementById('trackCondition');
+            const trackValue = document.getElementById('trackValue');
+            trackSlider.addEventListener('input', () => trackValue.textContent = trackConditions[trackSlider.value - 1]);
+
+            const snowSlider = document.getElementById('snowType');
+            const snowValue = document.getElementById('snowTypeValue');
+            snowSlider.addEventListener('input', () => snowValue.textContent = snowTypes[snowSlider.value - 1]);
+
+            document.getElementById('toggleDetails').addEventListener('click', function() {
+                const section = document.getElementById('detailsSection');
+                section.classList.toggle('hidden');
+                this.textContent = section.classList.contains('hidden') ? '▶ ⚙️ Дополнительно' : '▼ ⚙️ Дополнительно';
+            });
+
+            const stars = document.querySelectorAll('.snowflake-rating');
+            const ratingInput = document.getElementById('rating');
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    currentRating = index + 1;
+                    ratingInput.value = currentRating;
+                    stars.forEach((s, i) => {
+                        s.classList.toggle('active', i < currentRating);
+                        s.classList.toggle('inactive', i >= currentRating);
+                    });
+                });
+            });
+
+            function updateLayerLabels() {
+                const isGrip = reportType.value === 'grip';
+                document.querySelectorAll('.layer-header').forEach((el, i) => {
+                    if (isGrip) {
+                        const labels = ['База (грунт)', 'Основа', 'Финиш'];
+                        el.textContent = labels[i] || `Слой ${i+1}`;
+                    } else {
+                        el.textContent = `Слой ${i+1}`;
+                    }
+                });
+            }
+
+            function renderLayers() {
+                const container = document.getElementById('waxLayers');
+                container.innerHTML = '';
+                for (let i = 0; i < layerCount; i++) {
+                    const isGrip = reportType.value === 'grip';
+                    const layerLabel = isGrip ? ['База (грунт)', 'Основа', 'Финиш'][i] || `Слой ${i+1}` : `Слой ${i+1}`;
+                    container.innerHTML += `
+                        <div class="border rounded-xl p-3 mb-3 bg-gray-50">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm layer-header">${layerLabel}</span>
+                                ${i > 0 ? `<button type="button" class="remove-layer text-red-500 text-sm" data-index="${i}">✕</button>` : ''}
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" placeholder="Бренд" class="layer-brand border rounded-lg p-2" data-index="${i}">
+                                <input type="text" placeholder="Название" class="layer-name border rounded-lg p-2" data-index="${i}">
+                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2" data-index="${i}">
+                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2" data-index="${i}">
+                            </div>
+                        </div>
+                    `;
+                }
+                document.querySelectorAll('.remove-layer').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        layerCount--;
+                        renderLayers();
+                        updateLayerLabels();
+                    });
+                });
+            }
+
+            document.getElementById('addLayer').addEventListener('click', () => {
+                if (layerCount < 3) { layerCount++; renderLayers(); updateLayerLabels(); }
+            });
+
+            document.getElementById('reportForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    document.getElementById('message').innerHTML = '<span class="text-red-600">❌ Войдите в систему</span>';
                     return;
                 }
 
-                container.innerHTML = reports.map(r => `
-                    <div class="bg-white rounded-xl p-4 shadow-sm border">
-                        <div class="flex justify-between">
-                            <span>${r.report_type === 'glide' ? '⛷️ Скольжение' : '🎯 Держание'}</span>
-                            <span class="text-yellow-500">${'❄️'.repeat(r.rating)}</span>
-                        </div>
-                        <div class="text-sm text-gray-600">${r.country}, ${r.city} — ${r.location_name} • ${new Date(r.start_date).toLocaleDateString('ru-RU')}</div>
-                        <div class="text-sm">${r.air_temp}°C • ${r.track_condition}</div>
-                        ${r.comment ? `<p class="text-sm mt-1">💬 ${r.comment}</p>` : ''}
-                    </div>
-                `).join('');
-            }
+                if (currentRating === 0) {
+                    alert('Поставьте оценку смазке!');
+                    return;
+                }
 
-            window.logout = async () => { await supabase.auth.signOut(); window.location.href = 'index.html'; };
+                const layers = [];
+                const brands = document.querySelectorAll('.layer-brand');
+                const names = document.querySelectorAll('.layer-name');
+                const ranges = document.querySelectorAll('.layer-range');
+                const notes = document.querySelectorAll('.layer-notes');
 
-            init();
+                for (let i = 0; i < layerCount; i++) {
+                    if (names[i]?.value) {
+                        layers.push({
+                            layer_type: reportType.value === 'grip' ? ['base', 'main', 'top'][i] : `layer${i+1}`,
+                            layer_order: i + 1,
+                            wax_brand: brands[i]?.value || null,
+                            wax_name: names[i].value,
+                            temp_range: ranges[i]?.value || null,
+                            notes: notes[i]?.value || null
+                        });
+                    }
+                }
+
+                if (layers.length === 0) {
+                    alert('Добавьте хотя бы один слой смазки');
+                    return;
+                }
+
+                const reportData = {
+                    user_id: user.id,
+                    report_type: reportType.value,
+                    start_date: document.getElementById('startDate').value,
+                    country: document.getElementById('country').value,
+                    city: document.getElementById('city').value,
+                    location_name: document.getElementById('locationName').value,
+                    air_temp: parseInt(airTemp.value),
+                    track_condition: trackConditions[trackSlider.value - 1],
+                    snow_temp: document.getElementById('snowTemp').value ? parseInt(document.getElementById('snowTemp').value) : null,
+                    humidity: document.getElementById('humidity').value ? parseInt(document.getElementById('humidity').value) : null,
+                    pressure: document.getElementById('pressure').value ? parseInt(document.getElementById('pressure').value) : null,
+                    snow_type: snowTypes[snowSlider.value - 1],
+                    ski_brand: document.getElementById('skiBrand').value || null,
+                    ski_model: document.getElementById('skiModel').value || null,
+                    ski_base: document.getElementById('skiBase').value || null,
+                    ski_structure: document.getElementById('skiStructure').value || null,
+                    rating: currentRating,
+                    comment: document.getElementById('comment').value || null
+                };
+
+                const { data: report, error } = await supabase.from('reports').insert(reportData).select().single();
+                if (error) {
+                    document.getElementById('message').innerHTML = `<span class="text-red-600">❌ ${error.message}</span>`;
+                    return;
+                }
+
+                if (layers.length) {
+                    const layersWithReport = layers.map(l => ({ ...l, report_id: report.id }));
+                    await supabase.from('wax_layers').insert(layersWithReport);
+                }
+
+                document.getElementById('message').innerHTML = '<span class="text-green-600">✅ Отчёт сохранён!</span>';
+                setTimeout(() => window.location.href = 'index.html', 1000);
+            });
+
+            renderLayers();
         })();
     </script>
 </body>
