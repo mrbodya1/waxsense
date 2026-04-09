@@ -367,16 +367,30 @@
             window.showReportDetail = async function(reportId) {
                 console.log('🖱️ Клик по отчёту:', reportId);
                 
-                const { data: report } = await supabase
+                // Получаем отчёт
+                const { data: report, error } = await supabase
                     .from('reports')
                     .select(`
-                        *, wax_layers(*),
-                        profiles:user_id(username, full_name)
+                        id, user_id, report_type, start_date, country, city, location_name,
+                        air_temp, track_condition, snow_type, comment,
+                        snowflakes_total, snowflakes_count,
+                        ski_brand, ski_model, ski_base, ski_structure,
+                        wax_layers(id, wax_brand, wax_name, temp_range, notes)
                     `)
                     .eq('id', reportId)
                     .single();
             
-                if (!report) return;
+                if (error || !report) {
+                    console.error('Ошибка загрузки отчёта:', error);
+                    return;
+                }
+            
+                // Получаем профиль автора
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('username, full_name')
+                    .eq('id', report.user_id)
+                    .single();
             
                 // Записываем в историю
                 if (currentUser) {
@@ -401,7 +415,7 @@
                     }
                 }
             
-                const author = report.profiles?.full_name || report.profiles?.username || 'Аноним';
+                const author = profile?.full_name || profile?.username || 'Аноним';
                 const avg = report.snowflakes_count > 0 ? (report.snowflakes_total / report.snowflakes_count).toFixed(1) : '—';
             
                 document.getElementById('modalTitle').textContent = `${report.country}, ${report.city} — ${report.location_name}`;
@@ -432,12 +446,6 @@
             
                 const modal = document.getElementById('reportModal');
                 modal.classList.add('visible');
-            };
-            
-            // Закрытие модалки
-            window.closeModal = function() {
-                const modal = document.getElementById('reportModal');
-                modal.classList.remove('visible');
             };
             
             // Закрытие по клику на фон
