@@ -79,7 +79,7 @@
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <a href="find.html" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center justify-center gap-2">
+                <a href="find.html" id="heroFindBtn" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center justify-center gap-2">
                     🔍 Подобрать смазку
                 </a>
                 <a href="report.html" class="btn-secondary text-white px-8 py-4 rounded-xl text-lg font-medium inline-flex items-center justify-center gap-2">
@@ -208,17 +208,25 @@
             async function updateAuthUI() {
                 const { data: { user } } = await supabase.auth.getUser();
                 const el = document.getElementById('authSection');
+                
+                // Кнопка "Подобрать" в hero
+                const findBtn = document.querySelector('a[href="find.html"]');
+                
                 if (user) {
                     el.innerHTML = `
                         <a href="profile.html" class="text-gray-700 hover:text-teal-600 font-medium">👤 Профиль</a>
                         <a href="report.html" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700">+ Отчёт</a>
                         <button onclick="logout()" class="text-gray-500 text-sm hover:text-gray-700">Выйти</button>
                     `;
+                    // Оставляем ссылку на find.html для авторизованных
+                    if (findBtn) findBtn.href = 'find.html';
                 } else {
                     el.innerHTML = `
                         <a href="auth.html" class="text-gray-700 hover:text-teal-600 font-medium">Вход</a>
                         <a href="auth.html" class="bg-teal-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-teal-700">Регистрация</a>
                     `;
+                    // Для гостей кнопка "Подобрать" ведёт на auth.html
+                    if (findBtn) findBtn.href = 'auth.html';
                 }
             }
 
