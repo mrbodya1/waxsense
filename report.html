@@ -228,12 +228,12 @@
             });
 
             document.getElementById('reportForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    document.getElementById('message').innerHTML = '<span class="text-red-600">❌ Войдите в систему</span>';
-                    return;
-                }
+                 e.preventDefault();
+                 const { data: { user } } = await supabase.auth.getUser();
+                 if (!user) {
+                     window.location.href = 'auth.html';
+                       return;
+                 }
 
                 const layers = [];
                 const brands = document.querySelectorAll('.layer-brand');
