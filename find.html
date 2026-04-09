@@ -16,4 +16,344 @@
         .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="bg-gray-50 min-h
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white border-b">
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <a href="index.html" class="text-2xl font-bold text-teal-600">❄️ WaxCrowd</a>
+        </div>
+    </nav>
+
+    <main class="max-w-2xl mx-auto px-4 py-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h1 class="text-xl font-bold mb-4 text-teal-700">🔍 Подобрать смазку</h1>
+            
+            <div class="flex border-b mb-6">
+                <button id="tabGlide" class="tab-btn active flex-1">⛷️ Скольжение</button>
+                <button id="tabGrip" class="tab-btn flex-1">🎯 Держание</button>
+            </div>
+
+            <form id="findForm">
+                <input type="hidden" id="reportType" value="glide">
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Страна</label>
+                            <input type="text" id="country" placeholder="Россия" class="w-full border rounded-xl p-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Город</label>
+                            <input type="text" id="city" placeholder="Москва" class="w-full border rounded-xl p-3">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Место</label>
+                            <input type="text" id="locationName" placeholder="Лужники" class="w-full border rounded-xl p-3">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Температура воздуха: <span id="airTempValue">-5</span>°C</label>
+                        <input type="range" id="airTemp" min="-30" max="15" value="-5" step="1" class="w-full">
+                        <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Осадки</label>
+                        <div class="grid grid-cols-4 gap-2" id="precipTypeGroup">
+                            <div class="precip-btn active" data-type="none"><span>☀️</span>Без осадков</div>
+                            <div class="precip-btn" data-type="snow"><span>❄️</span>Снег</div>
+                            <div class="precip-btn" data-type="rain"><span>🌧️</span>Дождь</div>
+                            <div class="precip-btn" data-type="mixed"><span>🌨️</span>Смешанные</div>
+                        </div>
+                        <input type="hidden" id="precipitationType" value="none">
+                        
+                        <div id="intensityGroup" class="mt-3 hidden">
+                            <label class="block text-sm font-medium mb-1">Интенсивность: <span id="intensityValue">Средние</span></label>
+                            <input type="range" id="intensity" min="1" max="3" value="2" step="1" class="w-full">
+                            <div class="slider-label"><span>Слабые</span><span>Средние</span><span>Сильные</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="button" id="toggleDetails" class="text-teal-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
+                </div>
+
+                <div id="detailsSection" class="hidden space-y-4 mt-4 pt-4 border-t">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div><label class="block text-sm mb-1">Темп. снега</label><input type="number" id="snowTemp" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Влажность %</label><input type="number" id="humidity" min="0" max="100" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Давление</label><input type="number" id="pressure" class="w-full border rounded-xl p-2"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Состояние трассы: <span id="trackValue">Жесткая</span></label>
+                        <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Тип снега: <span id="snowTypeValue">Мелкозернистый</span></label>
+                        <input type="range" id="snowType" min="1" max="6" value="2" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>Свежий</span><span>Мелкозерн</span><span>Старый</span><span>Мокрый</span><span>Подмерз</span><span>Искусств</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-6 bg-teal-600 text-white py-3 rounded-xl font-medium hover:bg-teal-700">
+                    🔍 Подобрать
+                </button>
+            </form>
+
+            <div id="results" class="mt-6 space-y-3"></div>
+        </div>
+    </main>
+
+    <!-- Модальное окно для деталей отчёта -->
+    <div id="reportModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold" id="modalTitle">Детали отчёта</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            const trackConditions = ['Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
+            const snowTypes = ['Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
+            const intensityNames = ['Слабые', 'Средние', 'Сильные'];
+
+            let currentUser = null;
+            let currentReportId = null;
+
+            async function init() {
+                const { data: { user } } = await supabase.auth.getUser();
+                currentUser = user;
+            }
+
+            const tabGlide = document.getElementById('tabGlide');
+            const tabGrip = document.getElementById('tabGrip');
+            const reportType = document.getElementById('reportType');
+
+            tabGlide.addEventListener('click', () => {
+                tabGlide.classList.add('active'); tabGrip.classList.remove('active');
+                reportType.value = 'glide';
+            });
+            tabGrip.addEventListener('click', () => {
+                tabGrip.classList.add('active'); tabGlide.classList.remove('active');
+                reportType.value = 'grip';
+            });
+
+            const airTemp = document.getElementById('airTemp');
+            airTemp.addEventListener('input', () => {
+                document.getElementById('airTempValue').textContent = airTemp.value;
+            });
+
+            const trackSlider = document.getElementById('trackCondition');
+            trackSlider.addEventListener('input', () => {
+                document.getElementById('trackValue').textContent = trackConditions[trackSlider.value - 1];
+            });
+
+            const snowSlider = document.getElementById('snowType');
+            snowSlider.addEventListener('input', () => {
+                document.getElementById('snowTypeValue').textContent = snowTypes[snowSlider.value - 1];
+            });
+
+            const intensitySlider = document.getElementById('intensity');
+            intensitySlider.addEventListener('input', () => {
+                document.getElementById('intensityValue').textContent = intensityNames[intensitySlider.value - 1];
+            });
+
+            document.getElementById('toggleDetails').addEventListener('click', function() {
+                const section = document.getElementById('detailsSection');
+                section.classList.toggle('hidden');
+                this.textContent = section.classList.contains('hidden') ? '▶ ⚙️ Дополнительно' : '▼ ⚙️ Дополнительно';
+            });
+
+            // Осадки
+            const precipBtns = document.querySelectorAll('.precip-btn');
+            const precipTypeInput = document.getElementById('precipitationType');
+            const intensityGroup = document.getElementById('intensityGroup');
+
+            precipBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    precipBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const type = btn.dataset.type;
+                    precipTypeInput.value = type;
+                    intensityGroup.classList.toggle('hidden', type === 'none');
+                });
+            });
+
+            // Поиск
+            document.getElementById('findForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const filters = {
+                    report_type: reportType.value,
+                    air_temp: parseInt(airTemp.value),
+                    precipitation_type: precipTypeInput.value,
+                    precipitation_intensity: precipTypeInput.value !== 'none' ? intensityNames[intensitySlider.value - 1] : null,
+                    snow_temp: document.getElementById('snowTemp').value ? parseInt(document.getElementById('snowTemp').value) : null,
+                    track_condition: trackConditions[trackSlider.value - 1],
+                    snow_type: snowTypes[snowSlider.value - 1]
+                };
+
+                // Запрос отчётов
+                let query = supabase
+                    .from('reports')
+                    .select(`
+                        id, user_id, start_date, country, city, location_name,
+                        air_temp, track_condition, snow_type, comment,
+                        snowflakes_total, snowflakes_count,
+                        ski_brand, ski_model, ski_base, ski_structure,
+                        wax_layers(wax_brand, wax_name, temp_range, notes)
+                    `)
+                    .eq('report_type', filters.report_type)
+                    .gte('air_temp', filters.air_temp - 5)
+                    .lte('air_temp', filters.air_temp + 5)
+                    .limit(10);
+
+                if (filters.precipitation_type !== 'none') {
+                    query = query.eq('precipitation_type', filters.precipitation_type);
+                }
+
+                const { data: reports, error } = await query;
+
+                if (error || !reports?.length) {
+                    document.getElementById('results').innerHTML = '<p class="text-gray-500 text-center py-8">Отчёты не найдены</p>';
+                    return;
+                }
+
+                // Получаем рейтинги авторов
+                const userIds = [...new Set(reports.map(r => r.user_id))];
+                const { data: profiles } = await supabase
+                    .from('profiles')
+                    .select('id, username, full_name, user_rating')
+                    .in('id', userIds);
+
+                const profilesMap = {};
+                profiles?.forEach(p => { profilesMap[p.id] = p; });
+
+                // Сортируем по рейтингу отчёта + рейтинг автора
+                const sorted = reports.sort((a, b) => {
+                    const scoreA = (a.snowflakes_total / (a.snowflakes_count || 1)) + (profilesMap[a.user_id]?.user_rating || 0);
+                    const scoreB = (b.snowflakes_total / (b.snowflakes_count || 1)) + (profilesMap[b.user_id]?.user_rating || 0);
+                    return scoreB - scoreA;
+                });
+
+                renderResults(sorted.slice(0, 3), profilesMap);
+            });
+
+            function renderResults(reports, profilesMap) {
+                const container = document.getElementById('results');
+                container.innerHTML = reports.map(r => {
+                    const avg = r.snowflakes_count > 0 ? (r.snowflakes_total / r.snowflakes_count).toFixed(1) : '—';
+                    const author = profilesMap[r.user_id]?.full_name || profilesMap[r.user_id]?.username || 'Аноним';
+                    const authorRating = profilesMap[r.user_id]?.user_rating?.toFixed(1) || '—';
+                    const waxes = r.wax_layers?.map(l => l.wax_name).join(' + ') || '—';
+
+                    return `
+                        <div class="border rounded-xl p-4 cursor-pointer hover:shadow-md transition" onclick="showReportDetail('${r.id}')">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="font-medium">${r.country}, ${r.city} — ${r.location_name}</span>
+                                    <span class="text-sm text-gray-500 ml-2">${new Date(r.start_date).toLocaleDateString('ru-RU')}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-yellow-500">❄️ ${avg}</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-sm mb-2">
+                                <div><span class="text-gray-500">Темп:</span> ${r.air_temp}°C</div>
+                                <div><span class="text-gray-500">Трасса:</span> ${r.track_condition}</div>
+                                <div><span class="text-gray-500">Снег:</span> ${r.snow_type || '—'}</div>
+                            </div>
+                            <div class="text-sm mb-2">
+                                <span class="text-gray-500">🧴 Смазка:</span> ${waxes}
+                            </div>
+                            <div class="flex justify-between text-sm text-gray-500">
+                                <span>👤 ${author} (рейтинг: ${authorRating})</span>
+                                <span>${r.snowflakes_count} оценок</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.showReportDetail = async function(reportId) {
+                currentReportId = reportId;
+                
+                const { data: report } = await supabase
+                    .from('reports')
+                    .select(`
+                        *, wax_layers(*),
+                        profiles:user_id(username, full_name)
+                    `)
+                    .eq('id', reportId)
+                    .single();
+
+                if (!report) return;
+
+                // Записываем в историю
+                if (currentUser) {
+                    await supabase.from('view_history').upsert({
+                        user_id: currentUser.id,
+                        report_id: reportId,
+                        viewed_at: new Date()
+                    }, { onConflict: 'user_id, report_id' });
+                }
+
+                const author = report.profiles?.full_name || report.profiles?.username || 'Аноним';
+                const avg = report.snowflakes_count > 0 ? (report.snowflakes_total / report.snowflakes_count).toFixed(1) : '—';
+
+                document.getElementById('modalTitle').textContent = `${report.country}, ${report.city} — ${report.location_name}`;
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="text-gray-500">Дата:</span> ${new Date(report.start_date).toLocaleDateString('ru-RU')}</div>
+                            <div><span class="text-gray-500">Температура:</span> ${report.air_temp}°C</div>
+                            <div><span class="text-gray-500">Трасса:</span> ${report.track_condition}</div>
+                            <div><span class="text-gray-500">Снег:</span> ${report.snow_type || '—'}</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Лыжи:</span> ${report.ski_brand || '—'} ${report.ski_model || ''} • ${report.ski_base || '—'} • ${report.ski_structure || '—'}
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Слои смазки:</span>
+                            ${report.wax_layers?.map(l => `
+                                <div class="ml-4 mt-1 text-sm">${l.wax_brand || ''} ${l.wax_name} (${l.temp_range || '—'}) ${l.notes ? '— ' + l.notes : ''}</div>
+                            `).join('') || '—'}
+                        </div>
+                        ${report.comment ? `<div class="bg-gray-50 p-3 rounded-lg">💬 ${report.comment}</div>` : ''}
+                        <div class="flex justify-between items-center pt-3 border-t">
+                            <span>👤 ${author}</span>
+                            <span>❄️ ${avg} (${report.snowflakes_count} оценок)</span>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('reportModal').classList.remove('hidden');
+                document.getElementById('reportModal').style.display = 'flex';
+            };
+
+            window.closeModal = function() {
+                document.getElementById('reportModal').classList.add('hidden');
+                document.getElementById('reportModal').style.display = 'none';
+            };
+
+            init();
+        })();
+    </script>
+</body>
+</html>
