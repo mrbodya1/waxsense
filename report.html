@@ -295,7 +295,12 @@
                 setTimeout(() => window.location.href = 'index.html', 1000);
             });
 
-            renderLayers();
+                        // Проверяем авторизацию перед загрузкой
+            checkAuth().then(isAuth => {
+                if (isAuth) {
+                    renderLayers();
+                }
+            });
         })();
     </script>
 </body>
