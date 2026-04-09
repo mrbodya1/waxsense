@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подбор смазки | WaxCrowd</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: #0d9488; border-bottom-color: #0d9488; }
+        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
+        .precip-btn { padding: 10px; border: 1px solid #d1d5db; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .precip-btn.active { border-color: #0d9488; background: #f0fdfa; }
+        .precip-btn span { font-size: 24px; display: block; margin-bottom: 4px; }
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h
