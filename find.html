@@ -129,12 +129,15 @@
                     <!-- Погода -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Погода</label>
-                        <div class="grid grid-cols-5 gap-2" id="weatherGroup">
+                        <div class="grid grid-cols-4 gap-2" id="weatherGroup">
                             <div class="weather-btn" data-weather="any">🌍 Любая</div>
                             <div class="weather-btn active" data-weather="sunny"><span>☀️</span>Солнечно</div>
                             <div class="weather-btn" data-weather="cloudy"><span>⛅</span>Облачно</div>
                             <div class="weather-btn" data-weather="overcast"><span>☁️</span>Пасмурно</div>
-                            <div class="weather-btn" data-weather="snow"><span>🌨️</span>Снегопад</div>
+                            <div class="weather-btn" data-weather="light_snow"><span>🌨️</span>Слабый снег</div>
+                            <div class="weather-btn" data-weather="heavy_snow"><span>❄️❄️</span>Сильный снег</div>
+                            <div class="weather-btn" data-weather="rain"><span>🌧️</span>Дождь</div>
+                            <div class="weather-btn" data-weather="sleet"><span>🌨️🌧️</span>Снег с дождём</div>
                         </div>
                         <input type="hidden" id="weather" value="sunny">
                     </div>
@@ -228,7 +231,23 @@
             const intensityNames = ['Слабые', 'Средние', 'Сильные'];
             
             const weatherIcons = {
-                'sunny': '☀️', 'cloudy': '⛅', 'overcast': '☁️', 'snow': '🌨️'
+                'sunny': '☀️',
+                'cloudy': '⛅',
+                'overcast': '☁️',
+                'light_snow': '🌨️',
+                'heavy_snow': '❄️❄️',
+                'rain': '🌧️',
+                'sleet': '🌨️🌧️'
+            };
+            
+            const weatherNames = {
+                'sunny': 'Солнечно',
+                'cloudy': 'Облачно',
+                'overcast': 'Пасмурно',
+                'light_snow': 'Слабый снег',
+                'heavy_snow': 'Сильный снег',
+                'rain': 'Дождь',
+                'sleet': 'Снег с дождём'
             };
 
             async function init() {
