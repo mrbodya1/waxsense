@@ -518,6 +518,22 @@
             });
 
             init().then(() => { initCityAutocomplete(); });
+            console.log('✅ Скрипт загружен');
+
+            // Проверяем, что форма найдена
+            const form = document.getElementById('findForm');
+            console.log('📋 Форма найдена:', form);
+            
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    console.log('🖱️ Форма отправлена!');
+                });
+            }
+            
+            // Проверяем кнопку
+            const btn = document.querySelector('button[type="submit"]');
+            console.log('🔘 Кнопка найдена:', btn);    
         })();
     </script>
 </body>
