@@ -10,9 +10,9 @@
         .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
         .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
-        .city-suggestion { transition: background-color 0.15s; }
-        .city-suggestion:hover { background-color: #f0fdfa !important; }
-        .city-suggestion.bg-teal-100 { background-color: #ccfbf1; }
+        .suggestion-item { transition: background-color 0.15s; }
+        .suggestion-item:hover { background-color: #f0fdfa !important; }
+        .suggestion-item.bg-teal-100 { background-color: #ccfbf1; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -33,6 +33,7 @@
             <form id="reportForm">
                 <input type="hidden" id="reportType" value="glide">
 
+                <!-- 1. ОБЩЕЕ -->
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -73,6 +74,7 @@
                     </div>
                 </div>
 
+                <!-- Спойлер "Дополнительно" -->
                 <div class="mt-4">
                     <button type="button" id="toggleDetails" class="text-blue-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
                 </div>
@@ -92,25 +94,44 @@
                         </div>
                     </div>
 
+                    <!-- ЛЫЖИ: Бренд и Модель с автокомплитом -->
                     <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block text-sm mb-1">Бренд лыж</label><input type="text" id="skiBrand" placeholder="Fischer" class="w-full border rounded-xl p-2"></div>
-                        <div><label class="block text-sm mb-1">Модель</label><input type="text" id="skiModel" placeholder="Speedmax" class="w-full border rounded-xl p-2"></div>
+                        <div class="relative">
+                            <label class="block text-sm mb-1">Бренд лыж</label>
+                            <input type="text" id="skiBrandInput" placeholder="Выберите или введите свой" class="w-full border rounded-xl p-2" autocomplete="off">
+                            <input type="hidden" id="skiBrandId">
+                            <input type="hidden" id="isCustomBrand" value="false">
+                            <div id="brandSuggestions" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-sm mb-1">Модель лыж</label>
+                            <input type="text" id="skiModelInput" placeholder="Выберите или введите свою" class="w-full border rounded-xl p-2" autocomplete="off">
+                            <input type="hidden" id="skiModelId">
+                            <input type="hidden" id="isCustomModel" value="false">
+                            <div id="modelSuggestions" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
                         <div><label class="block text-sm mb-1">База (эпюра)</label><input type="text" id="skiBase" placeholder="28 / A5" class="w-full border rounded-xl p-2"></div>
                         <div><label class="block text-sm mb-1">Структура</label><input type="text" id="skiStructure" placeholder="P5-1" class="w-full border rounded-xl p-2"></div>
                     </div>
                 </div>
 
+                <!-- Слои смазки -->
                 <div class="mt-6 pt-4 border-t">
                     <h3 class="font-medium mb-3" id="waxSectionTitle">🧴 Смазка (скольжение)</h3>
                     <div id="waxLayers"></div>
                     <button type="button" id="addLayer" class="mt-3 text-blue-600 text-sm">+ Добавить слой</button>
                 </div>
 
+                <!-- Комментарий -->
                 <div class="mt-6 pt-4 border-t">
                     <label class="block text-sm font-medium mb-1">💬 Комментарий</label>
                     <textarea id="comment" rows="3" class="w-full border rounded-xl p-3" placeholder="Нюансы нанесения, ощущения..."></textarea>
                 </div>
 
+                <!-- Кнопки -->
                 <div class="flex gap-3 mt-6">
                     <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">💾 Сохранить отчёт</button>
                     <button type="button" onclick="window.location.href='index.html'" class="px-6 py-3 border rounded-xl hover:bg-gray-50">Отмена</button>
@@ -212,16 +233,16 @@
                                 ${i > 0 ? `<button type="button" class="remove-layer text-red-500 text-sm" data-index="${i}">✕</button>` : ''}
                             </div>
                             <div class="grid grid-cols-2 gap-2">
-                                <input type="text" placeholder="Бренд" class="layer-brand border rounded-lg p-2" data-index="${i}">
-                                <input type="text" placeholder="Название" class="layer-name border rounded-lg p-2" data-index="${i}">
-                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2" data-index="${i}">
-                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2" data-index="${i}">
+                                <input type="text" placeholder="Бренд" class="layer-brand border rounded-lg p-2">
+                                <input type="text" placeholder="Название" class="layer-name border rounded-lg p-2">
+                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2">
+                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2">
                             </div>
                         </div>
                     `;
                 }
                 document.querySelectorAll('.remove-layer').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                    btn.addEventListener('click', () => {
                         layerCount--;
                         renderLayers();
                         updateLayerLabels();
@@ -234,7 +255,7 @@
             });
 
             // =============================================
-            // АВТОКОМПЛИТ ДЛЯ ГОРОДОВ (T9)
+            // АВТОКОМПЛИТ ДЛЯ ГОРОДОВ
             // =============================================
             function initCityAutocomplete() {
                 const cityInput = document.getElementById('cityInput');
@@ -255,38 +276,28 @@
                     }
                     
                     debounceTimer = setTimeout(async () => {
-                        try {
-                            const { data: cities, error } = await supabase
-                                .from('cities')
-                                .select('id, name, region_name, population, label')
-                                .ilike('name', `${query}%`)
-                                .order('population', { ascending: false })
-                                .limit(8);
-                            
-                            if (error) throw error;
-                            
-                            currentSuggestions = cities || [];
-                            renderSuggestions(currentSuggestions);
-                            
-                        } catch (err) {
-                            console.error('Ошибка поиска городов:', err);
-                        }
+                        const { data: cities } = await supabase
+                            .from('cities')
+                            .select('id, name, region_name, population, label')
+                            .ilike('name', `${query}%`)
+                            .order('population', { ascending: false })
+                            .limit(8);
+                        
+                        currentSuggestions = cities || [];
+                        renderCitySuggestions(currentSuggestions);
                     }, 300);
                 });
                 
-                function renderSuggestions(cities) {
+                function renderCitySuggestions(cities) {
                     if (!cities || cities.length === 0) {
-                        performFuzzySearch(cityInput.value.trim());
+                        performFuzzyCitySearch(cityInput.value.trim());
                         return;
                     }
                     
                     suggestionsDiv.innerHTML = cities.map((city, index) => `
-                        <div class="city-suggestion px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" 
-                             data-index="${index}"
-                             data-id="${city.id}"
-                             data-name="${city.name}"
-                             data-region="${city.region_name}"
-                             data-label="${city.label}">
+                        <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" 
+                             data-index="${index}" data-id="${city.id}" data-name="${city.name}" 
+                             data-region="${city.region_name}" data-label="${city.label}">
                             <span>
                                 <span class="font-medium">${city.name}</span>
                                 <span class="text-sm text-gray-500 ml-2">${city.region_name}</span>
@@ -298,14 +309,12 @@
                     suggestionsDiv.classList.remove('hidden');
                     selectedIndex = -1;
                     
-                    document.querySelectorAll('.city-suggestion').forEach(el => {
-                        el.addEventListener('click', () => {
-                            selectCity(el.dataset);
-                        });
+                    document.querySelectorAll('#citySuggestions .suggestion-item').forEach(el => {
+                        el.addEventListener('click', () => selectCity(el.dataset));
                     });
                 }
                 
-                async function performFuzzySearch(query) {
+                async function performFuzzyCitySearch(query) {
                     if (query.length < 3) {
                         suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Введите ещё пару букв...</div>';
                         suggestionsDiv.classList.remove('hidden');
@@ -326,7 +335,7 @@
                     }
                     
                     currentSuggestions = cities;
-                    renderSuggestions(cities);
+                    renderCitySuggestions(cities);
                 }
                 
                 function selectCity(data) {
@@ -337,8 +346,7 @@
                 }
                 
                 cityInput.addEventListener('keydown', (e) => {
-                    const items = document.querySelectorAll('.city-suggestion');
-                    
+                    const items = document.querySelectorAll('#citySuggestions .suggestion-item');
                     if (e.key === 'ArrowDown') {
                         e.preventDefault();
                         selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
@@ -372,22 +380,226 @@
                         suggestionsDiv.classList.add('hidden');
                     }
                 });
+            }
+
+            // =============================================
+            // АВТОКОМПЛИТ ДЛЯ БРЕНДОВ
+            // =============================================
+            function initBrandAutocomplete() {
+                const brandInput = document.getElementById('skiBrandInput');
+                const suggestionsDiv = document.getElementById('brandSuggestions');
+                const brandIdInput = document.getElementById('skiBrandId');
+                const isCustomBrand = document.getElementById('isCustomBrand');
                 
-                cityInput.addEventListener('focus', () => {
-                    if (cityInput.value.length >= 2 && currentSuggestions.length > 0) {
+                let debounceTimer;
+                
+                brandInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    
+                    if (query.length < 1) {
+                        suggestionsDiv.classList.add('hidden');
+                        return;
+                    }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        const { data: brands } = await supabase
+                            .from('ski_brands')
+                            .select('id, name')
+                            .ilike('name', `${query}%`)
+                            .order('sort_order')
+                            .limit(8);
+                        
+                        const { data: userBrands } = await supabase
+                            .from('user_ski_brands')
+                            .select('id, name')
+                            .ilike('name', `${query}%`)
+                            .eq('status', 'approved')
+                            .limit(5);
+                        
+                        const allBrands = [...(brands || []), ...(userBrands || [])];
+                        
+                        if (allBrands.length === 0) {
+                            suggestionsDiv.innerHTML = `
+                                <div class="p-3 text-sm">
+                                    <p class="text-gray-500 mb-2">Бренд не найден</p>
+                                    <button type="button" onclick="window.addCustomBrand('${query.replace(/'/g, "\\'")}')" 
+                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
+                                        + Добавить новый бренд "${query}"
+                                    </button>
+                                </div>
+                            `;
+                            suggestionsDiv.classList.remove('hidden');
+                            return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allBrands.map(b => `
+                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
+                                 data-id="${b.id}" data-name="${b.name}">
+                                <span class="font-medium">${b.name}</span>
+                            </div>
+                        `).join('');
+                        
                         suggestionsDiv.classList.remove('hidden');
+                        
+                        document.querySelectorAll('#brandSuggestions .suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                brandInput.value = el.dataset.name;
+                                brandIdInput.value = el.dataset.id;
+                                isCustomBrand.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                                loadModelsForBrand(el.dataset.id);
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!brandInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                        suggestionsDiv.classList.add('hidden');
                     }
                 });
             }
 
-            // Отправка формы
+            window.addCustomBrand = async function(brandName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                
+                const { data, error } = await supabase
+                    .from('user_ski_brands')
+                    .insert({ user_id: user.id, name: brandName, status: 'pending' })
+                    .select()
+                    .single();
+                
+                if (error) {
+                    if (error.code === '23505') alert('Этот бренд уже есть в базе или ожидает модерации');
+                    else alert('Не удалось добавить бренд');
+                    return;
+                }
+                
+                document.getElementById('skiBrandInput').value = brandName;
+                document.getElementById('isCustomBrand').value = 'true';
+                document.getElementById('brandSuggestions').classList.add('hidden');
+                alert(`Бренд "${brandName}" отправлен на модерацию`);
+            };
+
+            async function loadModelsForBrand(brandId) {
+                const { data: models } = await supabase
+                    .from('ski_models')
+                    .select('id, name')
+                    .eq('brand_id', brandId)
+                    .order('sort_order');
+                
+                window.currentBrandModels = models || [];
+            }
+
+            // =============================================
+            // АВТОКОМПЛИТ ДЛЯ МОДЕЛЕЙ
+            // =============================================
+            function initModelAutocomplete() {
+                const modelInput = document.getElementById('skiModelInput');
+                const suggestionsDiv = document.getElementById('modelSuggestions');
+                const modelIdInput = document.getElementById('skiModelId');
+                const isCustomModel = document.getElementById('isCustomModel');
+                
+                let debounceTimer;
+                
+                modelInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    const brandName = document.getElementById('skiBrandInput').value;
+                    
+                    if (query.length < 1) {
+                        suggestionsDiv.classList.add('hidden');
+                        return;
+                    }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        let allModels = [];
+                        
+                        if (window.currentBrandModels) {
+                            allModels = window.currentBrandModels.filter(m => 
+                                m.name.toLowerCase().includes(query.toLowerCase())
+                            );
+                        }
+                        
+                        const { data: userModels } = await supabase
+                            .from('user_ski_models')
+                            .select('id, model_name, brand_name')
+                            .ilike('model_name', `${query}%`)
+                            .eq('status', 'approved');
+                        
+                        if (brandName && userModels) {
+                            allModels = [...allModels, ...userModels.filter(m => m.brand_name === brandName)];
+                        }
+                        
+                        if (allModels.length === 0) {
+                            suggestionsDiv.innerHTML = `
+                                <div class="p-3 text-sm">
+                                    <p class="text-gray-500 mb-2">Модель не найдена</p>
+                                    <button type="button" onclick="window.addCustomModel('${query.replace(/'/g, "\\'")}')" 
+                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
+                                        + Добавить новую модель "${query}"
+                                    </button>
+                                </div>
+                            `;
+                            suggestionsDiv.classList.remove('hidden');
+                            return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allModels.map(m => `
+                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
+                                 data-id="${m.id}" data-name="${m.name || m.model_name}">
+                                <span class="font-medium">${m.name || m.model_name}</span>
+                            </div>
+                        `).join('');
+                        
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        document.querySelectorAll('#modelSuggestions .suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                modelInput.value = el.dataset.name;
+                                modelIdInput.value = el.dataset.id;
+                                isCustomModel.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!modelInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                        suggestionsDiv.classList.add('hidden');
+                    }
+                });
+            }
+
+            window.addCustomModel = async function(modelName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                
+                const brandName = document.getElementById('skiBrandInput').value;
+                if (!brandName) { alert('Сначала укажите бренд'); return; }
+                
+                const { error } = await supabase
+                    .from('user_ski_models')
+                    .insert({ user_id: user.id, brand_name: brandName, model_name: modelName, status: 'pending' });
+                
+                if (error) { alert('Не удалось добавить модель'); return; }
+                
+                document.getElementById('skiModelInput').value = modelName;
+                document.getElementById('isCustomModel').value = 'true';
+                document.getElementById('modelSuggestions').classList.add('hidden');
+                alert(`Модель "${modelName}" отправлена на модерацию`);
+            };
+
+            // =============================================
+            // ОТПРАВКА ФОРМЫ
+            // =============================================
             document.getElementById('reportForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    window.location.href = 'auth.html';
-                    return;
-                }
+                if (!user) { window.location.href = 'auth.html'; return; }
 
                 const layers = [];
                 const brands = document.querySelectorAll('.layer-brand');
@@ -408,10 +620,7 @@
                     }
                 }
 
-                if (layers.length === 0) {
-                    alert('Добавьте хотя бы один слой смазки');
-                    return;
-                }
+                if (layers.length === 0) { alert('Добавьте хотя бы один слой смазки'); return; }
 
                 const reportData = {
                     user_id: user.id,
@@ -427,8 +636,12 @@
                     humidity: document.getElementById('humidity').value ? parseInt(document.getElementById('humidity').value) : null,
                     pressure: document.getElementById('pressure').value ? parseInt(document.getElementById('pressure').value) : null,
                     snow_type: snowTypes[snowSlider.value - 1],
-                    ski_brand: document.getElementById('skiBrand').value || null,
-                    ski_model: document.getElementById('skiModel').value || null,
+                    ski_brand: document.getElementById('skiBrandInput').value,
+                    ski_brand_id: document.getElementById('isCustomBrand').value === 'true' ? null : document.getElementById('skiBrandId').value,
+                    is_custom_brand: document.getElementById('isCustomBrand').value === 'true',
+                    ski_model: document.getElementById('skiModelInput').value,
+                    ski_model_id: document.getElementById('isCustomModel').value === 'true' ? null : document.getElementById('skiModelId').value,
+                    is_custom_model: document.getElementById('isCustomModel').value === 'true',
                     ski_base: document.getElementById('skiBase').value || null,
                     ski_structure: document.getElementById('skiStructure').value || null,
                     rating: 0,
@@ -455,6 +668,8 @@
                 if (isAuth) {
                     renderLayers();
                     initCityAutocomplete();
+                    initBrandAutocomplete();
+                    initModelAutocomplete();
                 }
             });
         })();
