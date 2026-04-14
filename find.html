@@ -3,91 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Подбор смазки | Waxsense</title>
+    <title>Новый отчёт | Waxsense</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .tab-btn.active { color: #0d9488; border-bottom-color: #0d9488; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
         .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
-        .precip-btn { padding: 10px; border: 1px solid #d1d5db; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .precip-btn.active { border-color: #0d9488; background: #f0fdfa; }
-        .precip-btn span { font-size: 24px; display: block; margin-bottom: 4px; }
-        
-        #reportModal {
-            display: none !important;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            padding: 16px;
-        }
-        
-        #reportModal.visible {
-            display: flex !important;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            max-width: 700px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 24px;
-        }
-        
-        .result-card {
+        .suggestion-item { transition: background-color 0.15s; }
+        .suggestion-item:hover { background-color: #f0fdfa !important; }
+        .suggestion-item.bg-teal-100 { background-color: #ccfbf1; }
+        .weather-btn {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 14px;
         }
-        .result-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #0d9488;
+        .weather-btn.active {
+            border-color: #2563eb;
+            background: #eff6ff;
         }
-        
-        .city-suggestion { transition: background-color 0.15s; }
-        .city-suggestion:hover { background-color: #f0fdfa !important; }
-        .city-suggestion.bg-teal-100 { background-color: #ccfbf1; }
+        .weather-btn span {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
-        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-bold text-teal-600">❄️ Waxsense</a>
-            <div class="flex gap-4">
-                <a href="index.html" class="text-gray-600">Главная</a>
-                <a href="profile.html" class="text-gray-600">Профиль</a>
-                <a href="report.html" class="text-gray-600">Добавить</a>
-                <button onclick="logout()" class="text-red-600">Выйти</button>
-            </div>
+        <div class="max-w-4xl mx-auto px-4 py-3">
+            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ Waxsense</a>
         </div>
     </nav>
 
     <main class="max-w-2xl mx-auto px-4 py-6">
         <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h1 class="text-xl font-bold mb-4 text-teal-700">🔍 Подобрать смазку</h1>
             
             <div class="flex border-b mb-6">
                 <button id="tabGlide" class="tab-btn active flex-1">⛷️ Скольжение</button>
                 <button id="tabGrip" class="tab-btn flex-1">🎯 Держание</button>
             </div>
 
-            <form id="findForm">
+            <form id="reportForm">
                 <input type="hidden" id="reportType" value="glide">
 
+                <!-- 1. ОБЩЕЕ -->
                 <div class="space-y-4">
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Дата старта</label>
+                            <input type="date" id="startDate" required class="w-full border rounded-xl p-3">
+                        </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Страна</label>
-                            <input type="text" id="country" placeholder="Россия" class="w-full border rounded-xl p-3">
+                            <select id="country" class="w-full border rounded-xl p-3">
+                                <option value="Россия" selected>🇷🇺 Россия</option>
+                                <option value="Финляндия">🇫🇮 Финляндия</option>
+                                <option value="Швеция">🇸🇪 Швеция</option>
+                                <option value="Норвегия">🇳🇴 Норвегия</option>
+                                <option value="Эстония">🇪🇪 Эстония</option>
+                                <option value="Казахстан">🇰🇿 Казахстан</option>
+                                <option value="Беларусь">🇧🇾 Беларусь</option>
+                                <option value="Другая">🌍 Другая</option>
+                            </select>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
                         <div class="relative">
                             <label class="block text-sm font-medium mb-1">Город</label>
                             <input type="text" id="cityInput" placeholder="Начните вводить..." class="w-full border rounded-xl p-3" autocomplete="off">
@@ -96,37 +81,52 @@
                             <div id="citySuggestions" class="absolute z-50 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Место</label>
-                            <input type="text" id="locationName" placeholder="Лужники" class="w-full border rounded-xl p-3">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Температура воздуха: <span id="airTempValue">-5</span>°C</label>
-                        <input type="range" id="airTemp" min="-30" max="15" value="-5" step="1" class="w-full">
-                        <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Осадки</label>
-                        <div class="grid grid-cols-4 gap-2" id="precipTypeGroup">
-                            <div class="precip-btn active" data-type="none"><span>☀️</span>Без осадков</div>
-                            <div class="precip-btn" data-type="snow"><span>❄️</span>Снег</div>
-                            <div class="precip-btn" data-type="rain"><span>🌧️</span>Дождь</div>
-                            <div class="precip-btn" data-type="mixed"><span>🌨️</span>Смешанные</div>
-                        </div>
-                        <input type="hidden" id="precipitationType" value="none">
-                        
-                        <div id="intensityGroup" class="mt-3 hidden">
-                            <label class="block text-sm font-medium mb-1">Интенсивность: <span id="intensityValue">Средние</span></label>
-                            <input type="range" id="intensity" min="1" max="3" value="2" step="1" class="w-full">
-                            <div class="slider-label"><span>Слабые</span><span>Средние</span><span>Сильные</span></div>
+                            <label class="block text-sm font-medium mb-1">Место старта</label>
+                            <input type="text" id="locationName" placeholder="Лужники" required class="w-full border rounded-xl p-3">
                         </div>
                     </div>
                 </div>
 
+                <!-- 2. ПОГОДА -->
+                <div class="border rounded-lg p-4 bg-gray-50 mt-4">
+                    <h2 class="font-semibold mb-3">🌡️ Погодные условия</h2>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура от: <span id="tempFromValue">-5</span>°C</label>
+                            <input type="range" id="tempFrom" min="-30" max="15" value="-5" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура до: <span id="tempToValue">-2</span>°C</label>
+                            <input type="range" id="tempTo" min="-30" max="15" value="-2" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-2">Погода</label>
+                        <div class="grid grid-cols-4 gap-2" id="weatherGroup">
+                            <div class="weather-btn active" data-weather="sunny"><span>☀️</span>Солнечно</div>
+                            <div class="weather-btn" data-weather="cloudy"><span>⛅</span>Облачно</div>
+                            <div class="weather-btn" data-weather="overcast"><span>☁️</span>Пасмурно</div>
+                            <div class="weather-btn" data-weather="snow"><span>🌨️</span>Снегопад</div>
+                        </div>
+                        <input type="hidden" id="weather" value="sunny">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Состояние <span id="trackLabel">трассы</span>: <span id="trackValue">Жесткая</span></label>
+                        <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Спойлер "Дополнительно" -->
                 <div class="mt-4">
-                    <button type="button" id="toggleDetails" class="text-teal-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
+                    <button type="button" id="toggleDetails" class="text-blue-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
                 </div>
 
                 <div id="detailsSection" class="hidden space-y-4 mt-4 pt-4 border-t">
@@ -137,41 +137,58 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium mb-1">Состояние трассы: <span id="trackValue">Жесткая</span></label>
-                        <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
-                        <div class="slider-label">
-                            <span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
-                        </div>
-                    </div>
-
-                    <div>
                         <label class="block text-sm font-medium mb-1">Тип снега: <span id="snowTypeValue">Мелкозернистый</span></label>
                         <input type="range" id="snowType" min="1" max="6" value="2" step="1" class="w-full">
                         <div class="slider-label">
                             <span>Свежий</span><span>Мелкозерн</span><span>Старый</span><span>Мокрый</span><span>Подмерз</span><span>Искусств</span>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="relative">
+                            <label class="block text-sm mb-1">Бренд лыж</label>
+                            <input type="text" id="skiBrandInput" placeholder="Выберите или введите свой" class="w-full border rounded-xl p-2" autocomplete="off">
+                            <input type="hidden" id="skiBrandId">
+                            <input type="hidden" id="isCustomBrand" value="false">
+                            <div id="brandSuggestions" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-sm mb-1">Модель лыж</label>
+                            <input type="text" id="skiModelInput" placeholder="Выберите или введите свою" class="w-full border rounded-xl p-2" autocomplete="off">
+                            <input type="hidden" id="skiModelId">
+                            <input type="hidden" id="isCustomModel" value="false">
+                            <div id="modelSuggestions" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm mb-1">База (эпюра)</label><input type="text" id="skiBase" placeholder="28 / A5" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Структура</label><input type="text" id="skiStructure" placeholder="P5-1" class="w-full border rounded-xl p-2"></div>
+                    </div>
                 </div>
 
-                <button type="submit" class="w-full mt-6 bg-teal-600 text-white py-3 rounded-xl font-medium hover:bg-teal-700">
-                    🔍 Подобрать
-                </button>
-            </form>
+                <!-- Слои смазки -->
+                <div class="mt-6 pt-4 border-t">
+                    <h3 class="font-medium mb-3" id="waxSectionTitle">🧴 Смазка (скольжение)</h3>
+                    <div id="waxLayers"></div>
+                    <button type="button" id="addLayer" class="mt-3 text-blue-600 text-sm">+ Добавить слой</button>
+                </div>
 
-            <div id="results" class="mt-6 space-y-3"></div>
+                <!-- Комментарий -->
+                <div class="mt-6 pt-4 border-t">
+                    <label class="block text-sm font-medium mb-1">💬 Комментарий</label>
+                    <textarea id="comment" rows="3" class="w-full border rounded-xl p-3" placeholder="Нюансы нанесения, ощущения..."></textarea>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">💾 Сохранить отчёт</button>
+                    <button type="button" onclick="window.location.href='index.html'" class="px-6 py-3 border rounded-xl hover:bg-gray-50">Отмена</button>
+                </div>
+                <div id="message" class="text-center text-sm mt-3"></div>
+            </form>
         </div>
     </main>
-
-    <!-- Модальное окно для деталей отчёта -->
-    <div id="reportModal">
-        <div class="modal-content">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-xl font-bold" id="modalTitle">Детали отчёта</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            <div id="modalContent"></div>
-        </div>
-    </div>
 
     <script>
         (function() {
@@ -179,195 +196,67 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            let currentUser = null;
+            async function checkAuth() {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { window.location.href = 'auth.html'; return false; }
+                return true;
+            }
+
+            let layerCount = 1;
             const trackConditions = ['Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
             const snowTypes = ['Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
-            const intensityNames = ['Слабые', 'Средние', 'Сильные'];
 
-            // Проверка авторизации
-            async function init() {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    window.location.href = 'auth.html';
-                    return;
-                }
-                currentUser = user;
-            }
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
 
-            // Выход
-            window.logout = async () => {
-                await supabase.auth.signOut();
-                window.location.href = 'index.html';
-            };
-
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ ГОРОДОВ (T9)
-            // =============================================
-            function initCityAutocomplete() {
-                const cityInput = document.getElementById('cityInput');
-                const suggestionsDiv = document.getElementById('citySuggestions');
-                
-                let debounceTimer;
-                let selectedIndex = -1;
-                let currentSuggestions = [];
-                
-                cityInput.addEventListener('input', async (e) => {
-                    clearTimeout(debounceTimer);
-                    const query = e.target.value.trim();
-                    
-                    if (query.length < 2) {
-                        suggestionsDiv.classList.add('hidden');
-                        currentSuggestions = [];
-                        return;
-                    }
-                    
-                    debounceTimer = setTimeout(async () => {
-                        try {
-                            const { data: cities, error } = await supabase
-                                .from('cities')
-                                .select('id, name, region_name, population, label')
-                                .ilike('name', `${query}%`)
-                                .order('population', { ascending: false })
-                                .limit(8);
-                            
-                            if (error) throw error;
-                            
-                            currentSuggestions = cities || [];
-                            renderSuggestions(currentSuggestions);
-                            
-                        } catch (err) {
-                            console.error('Ошибка поиска городов:', err);
-                        }
-                    }, 300);
-                });
-                
-                function renderSuggestions(cities) {
-                    if (!cities || cities.length === 0) {
-                        performFuzzySearch(cityInput.value.trim());
-                        return;
-                    }
-                    
-                    suggestionsDiv.innerHTML = cities.map((city, index) => `
-                        <div class="city-suggestion px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" 
-                             data-index="${index}"
-                             data-id="${city.id}"
-                             data-name="${city.name}"
-                             data-region="${city.region_name}"
-                             data-label="${city.label}">
-                            <span>
-                                <span class="font-medium">${city.name}</span>
-                                <span class="text-sm text-gray-500 ml-2">${city.region_name}</span>
-                            </span>
-                            <span class="text-xs text-gray-400">${city.population ? Math.round(city.population / 1000) + 'k' : ''}</span>
-                        </div>
-                    `).join('');
-                    
-                    suggestionsDiv.classList.remove('hidden');
-                    selectedIndex = -1;
-                    
-                    document.querySelectorAll('.city-suggestion').forEach(el => {
-                        el.addEventListener('click', () => {
-                            selectCity(el.dataset);
-                        });
-                    });
-                }
-                
-                async function performFuzzySearch(query) {
-                    if (query.length < 3) {
-                        suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Введите ещё пару букв...</div>';
-                        suggestionsDiv.classList.remove('hidden');
-                        return;
-                    }
-                    
-                    const { data: cities } = await supabase
-                        .from('cities')
-                        .select('id, name, region_name, population, label')
-                        .ilike('name', `%${query}%`)
-                        .order('population', { ascending: false })
-                        .limit(8);
-                    
-                    if (!cities || cities.length === 0) {
-                        suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Город не найден</div>';
-                        suggestionsDiv.classList.remove('hidden');
-                        return;
-                    }
-                    
-                    currentSuggestions = cities;
-                    renderSuggestions(cities);
-                }
-                
-                function selectCity(data) {
-                    cityInput.value = data.label || `${data.name} (${data.region})`;
-                    document.getElementById('cityId').value = data.id;
-                    document.getElementById('cityRegion').value = data.region;
-                    suggestionsDiv.classList.add('hidden');
-                }
-                
-                cityInput.addEventListener('keydown', (e) => {
-                    const items = document.querySelectorAll('.city-suggestion');
-                    
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                        updateSelection(items);
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        selectedIndex = Math.max(selectedIndex - 1, 0);
-                        updateSelection(items);
-                    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-                        e.preventDefault();
-                        const selected = items[selectedIndex];
-                        if (selected) selectCity(selected.dataset);
-                    } else if (e.key === 'Escape') {
-                        suggestionsDiv.classList.add('hidden');
-                    }
-                });
-                
-                function updateSelection(items) {
-                    items.forEach((item, i) => {
-                        if (i === selectedIndex) {
-                            item.classList.add('bg-teal-100');
-                            item.scrollIntoView({ block: 'nearest' });
-                        } else {
-                            item.classList.remove('bg-teal-100');
-                        }
-                    });
-                }
-                
-                document.addEventListener('click', (e) => {
-                    if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
-                });
-                
-                cityInput.addEventListener('focus', () => {
-                    if (cityInput.value.length >= 2 && currentSuggestions.length > 0) {
-                        suggestionsDiv.classList.remove('hidden');
-                    }
-                });
-            }
-
-            // Вкладки
             const tabGlide = document.getElementById('tabGlide');
             const tabGrip = document.getElementById('tabGrip');
             const reportType = document.getElementById('reportType');
+            const trackLabel = document.getElementById('trackLabel');
+            const waxTitle = document.getElementById('waxSectionTitle');
 
             tabGlide.addEventListener('click', () => {
-                tabGlide.classList.add('active'); 
-                tabGrip.classList.remove('active');
-                reportType.value = 'glide';
-            });
-            
-            tabGrip.addEventListener('click', () => {
-                tabGrip.classList.add('active'); 
-                tabGlide.classList.remove('active');
-                reportType.value = 'grip';
+                tabGlide.classList.add('active'); tabGrip.classList.remove('active');
+                reportType.value = 'glide'; trackLabel.textContent = 'трассы';
+                waxTitle.textContent = '🧴 Смазка (скольжение)'; updateLayerLabels();
             });
 
-            // Слайдеры
-            const airTemp = document.getElementById('airTemp');
-            airTemp.addEventListener('input', () => {
-                document.getElementById('airTempValue').textContent = airTemp.value;
+            tabGrip.addEventListener('click', () => {
+                tabGrip.classList.add('active'); tabGlide.classList.remove('active');
+                reportType.value = 'grip'; trackLabel.textContent = 'лыжни';
+                waxTitle.textContent = '🎯 Смазка (держание)'; updateLayerLabels();
+            });
+
+            // Слайдеры температуры
+            const tempFrom = document.getElementById('tempFrom');
+            const tempTo = document.getElementById('tempTo');
+            const tempFromValue = document.getElementById('tempFromValue');
+            const tempToValue = document.getElementById('tempToValue');
+
+            tempFrom.addEventListener('input', () => {
+                tempFromValue.textContent = tempFrom.value;
+                if (parseInt(tempFrom.value) > parseInt(tempTo.value)) {
+                    tempTo.value = tempFrom.value;
+                    tempToValue.textContent = tempFrom.value;
+                }
+            });
+
+            tempTo.addEventListener('input', () => {
+                tempToValue.textContent = tempTo.value;
+                if (parseInt(tempTo.value) < parseInt(tempFrom.value)) {
+                    tempFrom.value = tempTo.value;
+                    tempFromValue.textContent = tempTo.value;
+                }
+            });
+
+            // Кнопки погоды
+            const weatherBtns = document.querySelectorAll('.weather-btn');
+            const weatherInput = document.getElementById('weather');
+            weatherBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    weatherBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    weatherInput.value = btn.dataset.weather;
+                });
             });
 
             const trackSlider = document.getElementById('trackCondition');
@@ -380,234 +269,423 @@
                 document.getElementById('snowTypeValue').textContent = snowTypes[snowSlider.value - 1];
             });
 
-            const intensitySlider = document.getElementById('intensity');
-            intensitySlider.addEventListener('input', () => {
-                document.getElementById('intensityValue').textContent = intensityNames[intensitySlider.value - 1];
-            });
-
-            // Спойлер
             document.getElementById('toggleDetails').addEventListener('click', function() {
                 const section = document.getElementById('detailsSection');
                 section.classList.toggle('hidden');
                 this.textContent = section.classList.contains('hidden') ? '▶ ⚙️ Дополнительно' : '▼ ⚙️ Дополнительно';
             });
 
-            // Осадки
-            const precipBtns = document.querySelectorAll('.precip-btn');
-            const precipTypeInput = document.getElementById('precipitationType');
-            const intensityGroup = document.getElementById('intensityGroup');
-
-            precipBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    precipBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    const type = btn.dataset.type;
-                    precipTypeInput.value = type;
-                    intensityGroup.classList.toggle('hidden', type === 'none');
-                });
-            });
-
-            // Поиск
-            document.getElementById('findForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const filters = {
-                    report_type: reportType.value,
-                    air_temp: parseInt(airTemp.value),
-                    precipitation_type: precipTypeInput.value,
-                    precipitation_intensity: precipTypeInput.value !== 'none' ? intensityNames[intensitySlider.value - 1] : null,
-                    track_condition: trackConditions[trackSlider.value - 1],
-                    snow_type: snowTypes[snowSlider.value - 1]
-                };
-
-                let query = supabase
-                    .from('reports')
-                    .select(`
-                        id, user_id, start_date, country, city, location_name,
-                        air_temp, track_condition, snow_type, comment,
-                        snowflakes_total, snowflakes_count,
-                        ski_brand, ski_model, ski_base, ski_structure,
-                        wax_layers(wax_brand, wax_name, temp_range, notes)
-                    `)
-                    .eq('report_type', filters.report_type)
-                    .gte('air_temp', filters.air_temp - 5)
-                    .lte('air_temp', filters.air_temp + 5)
-                    .limit(10);
-
-                if (filters.precipitation_type !== 'none') {
-                    query = query.eq('precipitation_type', filters.precipitation_type);
-                }
-
-                const { data: reports, error } = await query;
-
-                if (error || !reports?.length) {
-                    document.getElementById('results').innerHTML = '<p class="text-gray-500 text-center py-8">Отчёты не найдены</p>';
-                    return;
-                }
-
-                const userIds = [...new Set(reports.map(r => r.user_id))];
-                const { data: profiles } = await supabase
-                    .from('profiles')
-                    .select('id, username, full_name, user_rating')
-                    .in('id', userIds);
-
-                const profilesMap = {};
-                profiles?.forEach(p => { profilesMap[p.id] = p; });
-
-                const sorted = reports.sort((a, b) => {
-                    const scoreA = (a.snowflakes_total / (a.snowflakes_count || 1)) + (profilesMap[a.user_id]?.user_rating || 0);
-                    const scoreB = (b.snowflakes_total / (b.snowflakes_count || 1)) + (profilesMap[b.user_id]?.user_rating || 0);
-                    return scoreB - scoreA;
-                });
-
-                renderResults(sorted.slice(0, 3), profilesMap);
-            });
-
-            function renderResults(reports, profilesMap) {
-                const container = document.getElementById('results');
-                
-                if (!reports || reports.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500 text-center py-8">Отчёты не найдены</p>';
-                    return;
-                }
-                
-                container.innerHTML = reports.map(r => {
-                    const avg = r.snowflakes_count > 0 ? (r.snowflakes_total / r.snowflakes_count).toFixed(1) : '—';
-                    const author = profilesMap[r.user_id]?.full_name || profilesMap[r.user_id]?.username || 'Аноним';
-                    const authorRating = profilesMap[r.user_id]?.user_rating?.toFixed(1) || '—';
-                    const waxes = r.wax_layers?.map(l => l.wax_name).join(' + ') || '—';
-
-                    return `
-                        <div class="result-card border rounded-xl p-4 bg-white" data-report-id="${r.id}">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <span class="font-medium">${r.country || '—'}, ${r.city || '—'} — ${r.location_name || '—'}</span>
-                                    <span class="text-sm text-gray-500 ml-2">${new Date(r.start_date).toLocaleDateString('ru-RU')}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-yellow-500">❄️ ${avg}</span>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-2 text-sm mb-2">
-                                <div><span class="text-gray-500">Темп:</span> ${r.air_temp}°C</div>
-                                <div><span class="text-gray-500">Трасса:</span> ${r.track_condition || '—'}</div>
-                                <div><span class="text-gray-500">Снег:</span> ${r.snow_type || '—'}</div>
-                            </div>
-                            <div class="text-sm mb-2">
-                                <span class="text-gray-500">🧴 Смазка:</span> ${waxes}
-                            </div>
-                            <div class="flex justify-between text-sm text-gray-500">
-                                <span>👤 ${author} (рейтинг: ${authorRating})</span>
-                                <span>${r.snowflakes_count || 0} оценок</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                document.querySelectorAll('[data-report-id]').forEach(card => {
-                    card.addEventListener('click', function() {
-                        const reportId = this.dataset.reportId;
-                        showReportDetail(reportId);
-                    });
+            function updateLayerLabels() {
+                const isGrip = reportType.value === 'grip';
+                document.querySelectorAll('.layer-header').forEach((el, i) => {
+                    if (isGrip) {
+                        const labels = ['База (грунт)', 'Основа', 'Финиш'];
+                        el.textContent = labels[i] || `Слой ${i+1}`;
+                    } else {
+                        el.textContent = `Слой ${i+1}`;
+                    }
                 });
             }
 
-            // Показ деталей отчёта
-            window.showReportDetail = async function(reportId) {
-                console.log('🖱️ Клик по отчёту:', reportId);
+            // Автокомплиты для смазок
+            function initWaxBrandAutocomplete(inputId, suggestionsId, brandIdInput, isCustomInput) {
+                const input = document.getElementById(inputId);
+                const suggestionsDiv = document.getElementById(suggestionsId);
+                const brandIdField = document.getElementById(brandIdInput);
+                const isCustomField = document.getElementById(isCustomInput);
+                let debounceTimer;
                 
-                const { data: report, error } = await supabase
-                    .from('reports')
-                    .select(`
-                        id, user_id, report_type, start_date, country, city, location_name,
-                        air_temp, track_condition, snow_type, comment,
-                        snowflakes_total, snowflakes_count,
-                        ski_brand, ski_model, ski_base, ski_structure,
-                        wax_layers(id, wax_brand, wax_name, temp_range, notes)
-                    `)
-                    .eq('id', reportId)
-                    .single();
-
-                if (error || !report) {
-                    console.error('Ошибка загрузки отчёта:', error);
-                    return;
-                }
-
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('username, full_name')
-                    .eq('id', report.user_id)
-                    .single();
-
-                if (currentUser) {
-                    const { data: existing } = await supabase
-                        .from('view_history')
-                        .select('id')
-                        .eq('user_id', currentUser.id)
-                        .eq('report_id', reportId)
-                        .maybeSingle();
+                input.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
                     
-                    if (!existing) {
-                        await supabase.from('view_history').insert({
-                            user_id: currentUser.id,
-                            report_id: reportId,
-                            viewed_at: new Date().toISOString(),
-                            rated: false
+                    debounceTimer = setTimeout(async () => {
+                        const { data: brands } = await supabase.from('wax_brands').select('id, name').ilike('name', `${query}%`).order('sort_order').limit(8);
+                        const { data: userBrands } = await supabase.from('user_wax_brands').select('id, name').ilike('name', `${query}%`).eq('status', 'approved').limit(5);
+                        const allBrands = [...(brands || []), ...(userBrands || [])];
+                        
+                        if (allBrands.length === 0) {
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Бренд не найден</p><button type="button" onclick="window.addCustomWaxBrand('${inputId}', '${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новый бренд "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allBrands.map(b => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${b.id}" data-name="${b.name}"><span class="font-medium">${b.name}</span></div>`).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                input.value = el.dataset.name;
+                                brandIdField.value = el.dataset.id;
+                                isCustomField.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                            });
                         });
-                    } else {
-                        await supabase.from('view_history')
-                            .update({ viewed_at: new Date().toISOString() })
-                            .eq('id', existing.id);
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
+                });
+            }
+
+            function initWaxProductAutocomplete(inputId, suggestionsId, productIdInput, isCustomInput, brandInputId) {
+                const input = document.getElementById(inputId);
+                const suggestionsDiv = document.getElementById(suggestionsId);
+                const productIdField = document.getElementById(productIdInput);
+                const isCustomField = document.getElementById(isCustomInput);
+                const brandInput = document.getElementById(brandInputId);
+                let debounceTimer;
+                
+                input.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    const brandName = brandInput.value;
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        let allProducts = [];
+                        if (brandName) {
+                            const { data: products } = await supabase.from('wax_products').select('id, name, wax_brands!inner(name)').ilike('name', `${query}%`).eq('wax_brands.name', brandName).limit(8);
+                            allProducts = products || [];
+                        }
+                        const { data: userProducts } = await supabase.from('user_wax_products').select('id, product_name').ilike('product_name', `${query}%`).eq('status', 'approved').eq('brand_name', brandName).limit(5);
+                        if (userProducts) allProducts = [...allProducts, ...userProducts.map(p => ({ id: p.id, name: p.product_name }))];
+                        
+                        if (allProducts.length === 0) {
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Смазка не найдена</p><button type="button" onclick="window.addCustomWaxProduct('${inputId}', '${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новую смазку "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allProducts.map(p => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${p.id}" data-name="${p.name}"><span class="font-medium">${p.name}</span></div>`).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                input.value = el.dataset.name;
+                                productIdField.value = el.dataset.id;
+                                isCustomField.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
+                });
+            }
+
+            window.addCustomWaxBrand = async function(inputId, brandName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                const { error } = await supabase.from('user_wax_brands').insert({ user_id: user.id, name: brandName, status: 'pending' });
+                if (error) { alert(error.code === '23505' ? 'Этот бренд уже есть или ожидает модерации' : 'Не удалось добавить бренд'); return; }
+                document.getElementById(inputId).value = brandName;
+                alert(`Бренд "${brandName}" отправлен на модерацию`);
+            };
+
+            window.addCustomWaxProduct = async function(inputId, productName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                const brandName = document.querySelector(`[id^="${inputId.replace('Name', 'Brand')}"]`)?.value;
+                if (!brandName) { alert('Сначала укажите бренд'); return; }
+                const { error } = await supabase.from('user_wax_products').insert({ user_id: user.id, brand_name: brandName, product_name: productName, status: 'pending' });
+                if (error) { alert('Не удалось добавить смазку'); return; }
+                document.getElementById(inputId).value = productName;
+                alert(`Смазка "${productName}" отправлена на модерацию`);
+            };
+
+            function renderLayers() {
+                const container = document.getElementById('waxLayers');
+                container.innerHTML = '';
+                for (let i = 0; i < layerCount; i++) {
+                    const isGrip = reportType.value === 'grip';
+                    const layerLabel = isGrip ? ['База (грунт)', 'Основа', 'Финиш'][i] || `Слой ${i+1}` : `Слой ${i+1}`;
+                    const brandInputId = `layer${i}WaxBrandInput`;
+                    const brandSuggestionsId = `layer${i}BrandSuggestions`;
+                    const brandIdId = `layer${i}WaxBrandId`;
+                    const isCustomBrandId = `layer${i}IsCustomBrand`;
+                    const nameInputId = `layer${i}WaxNameInput`;
+                    const nameSuggestionsId = `layer${i}NameSuggestions`;
+                    const nameIdId = `layer${i}WaxNameId`;
+                    const isCustomNameId = `layer${i}IsCustomName`;
+                    
+                    container.innerHTML += `
+                        <div class="border rounded-xl p-3 mb-3 bg-gray-50">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-sm layer-header">${layerLabel}</span>
+                                ${i > 0 ? `<button type="button" class="remove-layer text-red-500 text-sm" data-index="${i}">✕</button>` : ''}
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="relative">
+                                    <input type="text" id="${brandInputId}" placeholder="Бренд" class="layer-brand border rounded-lg p-2" autocomplete="off">
+                                    <input type="hidden" id="${brandIdId}"><input type="hidden" id="${isCustomBrandId}" value="false">
+                                    <div id="${brandSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" id="${nameInputId}" placeholder="Название" class="layer-name border rounded-lg p-2" autocomplete="off">
+                                    <input type="hidden" id="${nameIdId}"><input type="hidden" id="${isCustomNameId}" value="false">
+                                    <div id="${nameSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
+                                </div>
+                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2">
+                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2">
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                for (let i = 0; i < layerCount; i++) {
+                    initWaxBrandAutocomplete(`layer${i}WaxBrandInput`, `layer${i}BrandSuggestions`, `layer${i}WaxBrandId`, `layer${i}IsCustomBrand`);
+                    initWaxProductAutocomplete(`layer${i}WaxNameInput`, `layer${i}NameSuggestions`, `layer${i}WaxNameId`, `layer${i}IsCustomName`, `layer${i}WaxBrandInput`);
+                }
+                
+                document.querySelectorAll('.remove-layer').forEach(btn => {
+                    btn.addEventListener('click', () => { layerCount--; renderLayers(); updateLayerLabels(); });
+                });
+            }
+
+            document.getElementById('addLayer').addEventListener('click', () => {
+                if (layerCount < 3) { layerCount++; renderLayers(); updateLayerLabels(); }
+            });
+
+            // Автокомплит городов
+            function initCityAutocomplete() {
+                const cityInput = document.getElementById('cityInput');
+                const suggestionsDiv = document.getElementById('citySuggestions');
+                let debounceTimer;
+                
+                cityInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    if (query.length < 2) { suggestionsDiv.classList.add('hidden'); return; }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        const { data: cities } = await supabase.from('cities').select('id, name, region_name, population, label').ilike('name', `${query}%`).order('population', { ascending: false }).limit(8);
+                        if (!cities || cities.length === 0) {
+                            suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Город не найден</div>';
+                            suggestionsDiv.classList.remove('hidden'); return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = cities.map(city => `
+                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" data-id="${city.id}" data-name="${city.name}" data-region="${city.region_name}" data-label="${city.label}">
+                                <span><span class="font-medium">${city.name}</span><span class="text-sm text-gray-500 ml-2">${city.region_name}</span></span>
+                            </div>
+                        `).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        document.querySelectorAll('#citySuggestions .suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                cityInput.value = el.dataset.label || `${el.dataset.name} (${el.dataset.region})`;
+                                document.getElementById('cityId').value = el.dataset.id;
+                                document.getElementById('cityRegion').value = el.dataset.region;
+                                suggestionsDiv.classList.add('hidden');
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
+                });
+            }
+
+            // Автокомплит брендов лыж
+            function initBrandAutocomplete() {
+                const brandInput = document.getElementById('skiBrandInput');
+                const suggestionsDiv = document.getElementById('brandSuggestions');
+                const brandIdInput = document.getElementById('skiBrandId');
+                const isCustomBrand = document.getElementById('isCustomBrand');
+                let debounceTimer;
+                
+                brandInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        const { data: brands } = await supabase.from('ski_brands').select('id, name').ilike('name', `${query}%`).order('sort_order').limit(8);
+                        const { data: userBrands } = await supabase.from('user_ski_brands').select('id, name').ilike('name', `${query}%`).eq('status', 'approved').limit(5);
+                        const allBrands = [...(brands || []), ...(userBrands || [])];
+                        
+                        if (allBrands.length === 0) {
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Бренд не найден</p><button type="button" onclick="window.addCustomSkiBrand('${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новый бренд "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allBrands.map(b => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${b.id}" data-name="${b.name}"><span class="font-medium">${b.name}</span></div>`).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        document.querySelectorAll('#brandSuggestions .suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                brandInput.value = el.dataset.name;
+                                brandIdInput.value = el.dataset.id;
+                                isCustomBrand.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                                loadModelsForBrand(el.dataset.id);
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!brandInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
+                });
+            }
+
+            window.addCustomSkiBrand = async function(brandName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                const { error } = await supabase.from('user_ski_brands').insert({ user_id: user.id, name: brandName, status: 'pending' });
+                if (error) { alert(error.code === '23505' ? 'Этот бренд уже есть или ожидает модерации' : 'Не удалось добавить бренд'); return; }
+                document.getElementById('skiBrandInput').value = brandName;
+                document.getElementById('isCustomBrand').value = 'true';
+                document.getElementById('brandSuggestions').classList.add('hidden');
+                alert(`Бренд "${brandName}" отправлен на модерацию`);
+            };
+
+            async function loadModelsForBrand(brandId) {
+                const { data: models } = await supabase.from('ski_models').select('id, name').eq('brand_id', brandId).order('sort_order');
+                window.currentBrandModels = models || [];
+            }
+
+            // Автокомплит моделей лыж
+            function initModelAutocomplete() {
+                const modelInput = document.getElementById('skiModelInput');
+                const suggestionsDiv = document.getElementById('modelSuggestions');
+                const modelIdInput = document.getElementById('skiModelId');
+                const isCustomModel = document.getElementById('isCustomModel');
+                let debounceTimer;
+                
+                modelInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    const brandName = document.getElementById('skiBrandInput').value;
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        let allModels = [];
+                        if (window.currentBrandModels) {
+                            allModels = window.currentBrandModels.filter(m => m.name.toLowerCase().includes(query.toLowerCase()));
+                        }
+                        const { data: userModels } = await supabase.from('user_ski_models').select('id, model_name, brand_name').ilike('model_name', `${query}%`).eq('status', 'approved');
+                        if (brandName && userModels) allModels = [...allModels, ...userModels.filter(m => m.brand_name === brandName)];
+                        
+                        if (allModels.length === 0) {
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Модель не найдена</p><button type="button" onclick="window.addCustomSkiModel('${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новую модель "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
+                        }
+                        
+                        suggestionsDiv.innerHTML = allModels.map(m => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${m.id}" data-name="${m.name || m.model_name}"><span class="font-medium">${m.name || m.model_name}</span></div>`).join('');
+                        suggestionsDiv.classList.remove('hidden');
+                        
+                        document.querySelectorAll('#modelSuggestions .suggestion-item').forEach(el => {
+                            el.addEventListener('click', () => {
+                                modelInput.value = el.dataset.name;
+                                modelIdInput.value = el.dataset.id;
+                                isCustomModel.value = 'false';
+                                suggestionsDiv.classList.add('hidden');
+                            });
+                        });
+                    }, 300);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!modelInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
+                });
+            }
+
+            window.addCustomSkiModel = async function(modelName) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { alert('Войдите в систему'); return; }
+                const brandName = document.getElementById('skiBrandInput').value;
+                if (!brandName) { alert('Сначала укажите бренд'); return; }
+                const { error } = await supabase.from('user_ski_models').insert({ user_id: user.id, brand_name: brandName, model_name: modelName, status: 'pending' });
+                if (error) { alert('Не удалось добавить модель'); return; }
+                document.getElementById('skiModelInput').value = modelName;
+                document.getElementById('isCustomModel').value = 'true';
+                document.getElementById('modelSuggestions').classList.add('hidden');
+                alert(`Модель "${modelName}" отправлена на модерацию`);
+            };
+
+            // Отправка формы
+            document.getElementById('reportForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { window.location.href = 'auth.html'; return; }
+
+                const layers = [];
+                for (let i = 0; i < layerCount; i++) {
+                    const brandInput = document.getElementById(`layer${i}WaxBrandInput`);
+                    const nameInput = document.getElementById(`layer${i}WaxNameInput`);
+                    const rangeInput = document.querySelector(`#layer${i}WaxNameInput ~ .layer-range`);
+                    const notesInput = document.querySelector(`#layer${i}WaxNameInput ~ .layer-notes`);
+                    
+                    if (nameInput?.value) {
+                        layers.push({
+                            layer_type: reportType.value === 'grip' ? ['base', 'main', 'top'][i] : `layer${i+1}`,
+                            layer_order: i + 1,
+                            wax_brand: brandInput?.value || null,
+                            wax_name: nameInput.value,
+                            temp_range: rangeInput?.value || null,
+                            notes: notesInput?.value || null
+                        });
                     }
                 }
 
-                const author = profile?.full_name || profile?.username || 'Аноним';
-                const avg = report.snowflakes_count > 0 ? (report.snowflakes_total / report.snowflakes_count).toFixed(1) : '—';
+                if (layers.length === 0) { alert('Добавьте хотя бы один слой смазки'); return; }
 
-                document.getElementById('modalTitle').textContent = `${report.country}, ${report.city} — ${report.location_name}`;
-                document.getElementById('modalContent').innerHTML = `
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div><span class="text-gray-500">Дата:</span> ${new Date(report.start_date).toLocaleDateString('ru-RU')}</div>
-                            <div><span class="text-gray-500">Температура:</span> ${report.air_temp}°C</div>
-                            <div><span class="text-gray-500">Трасса:</span> ${report.track_condition}</div>
-                            <div><span class="text-gray-500">Снег:</span> ${report.snow_type || '—'}</div>
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Лыжи:</span> ${report.ski_brand || '—'} ${report.ski_model || ''} • ${report.ski_base || '—'} • ${report.ski_structure || '—'}
-                        </div>
-                        <div>
-                            <span class="text-gray-500">Слои смазки:</span>
-                            ${report.wax_layers?.map(l => `
-                                <div class="ml-4 mt-1 text-sm">${l.wax_brand || ''} ${l.wax_name} (${l.temp_range || '—'}) ${l.notes ? '— ' + l.notes : ''}</div>
-                            `).join('') || '—'}
-                        </div>
-                        ${report.comment ? `<div class="bg-gray-50 p-3 rounded-lg">💬 ${report.comment}</div>` : ''}
-                        <div class="flex justify-between items-center pt-3 border-t">
-                            <span>👤 ${author}</span>
-                            <span>❄️ ${avg} (${report.snowflakes_count} оценок)</span>
-                        </div>
-                    </div>
-                `;
+                const reportData = {
+                    user_id: user.id,
+                    report_type: reportType.value,
+                    start_date: document.getElementById('startDate').value,
+                    country: document.getElementById('country').value,
+                    city: document.getElementById('cityInput').value,
+                    city_id: document.getElementById('cityId').value || null,
+                    location_name: document.getElementById('locationName').value,
+                    temp_from: parseInt(tempFrom.value),
+                    temp_to: parseInt(tempTo.value),
+                    weather: weatherInput.value,
+                    track_condition: trackConditions[trackSlider.value - 1],
+                    snow_temp: document.getElementById('snowTemp').value ? parseInt(document.getElementById('snowTemp').value) : null,
+                    humidity: document.getElementById('humidity').value ? parseInt(document.getElementById('humidity').value) : null,
+                    pressure: document.getElementById('pressure').value ? parseInt(document.getElementById('pressure').value) : null,
+                    snow_type: snowTypes[snowSlider.value - 1],
+                    ski_brand: document.getElementById('skiBrandInput').value,
+                    ski_brand_id: document.getElementById('isCustomBrand').value === 'true' ? null : document.getElementById('skiBrandId').value,
+                    is_custom_brand: document.getElementById('isCustomBrand').value === 'true',
+                    ski_model: document.getElementById('skiModelInput').value,
+                    ski_model_id: document.getElementById('isCustomModel').value === 'true' ? null : document.getElementById('skiModelId').value,
+                    is_custom_model: document.getElementById('isCustomModel').value === 'true',
+                    ski_base: document.getElementById('skiBase').value || null,
+                    ski_structure: document.getElementById('skiStructure').value || null,
+                    rating: 0,
+                    comment: document.getElementById('comment').value || null
+                };
 
-                const modal = document.getElementById('reportModal');
-                modal.classList.add('visible');
-            };
-
-            window.closeModal = function() {
-                const modal = document.getElementById('reportModal');
-                modal.classList.remove('visible');
-            };
-
-            document.getElementById('reportModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeModal();
+                const { data: report, error } = await supabase.from('reports').insert(reportData).select().single();
+                if (error) {
+                    document.getElementById('message').innerHTML = `<span class="text-red-600">❌ ${error.message}</span>`;
+                    return;
                 }
+
+                if (layers.length) {
+                    const layersWithReport = layers.map(l => ({ ...l, report_id: report.id }));
+                    await supabase.from('wax_layers').insert(layersWithReport);
+                }
+
+                document.getElementById('message').innerHTML = '<span class="text-green-600">✅ Отчёт сохранён!</span>';
+                setTimeout(() => window.location.href = 'index.html', 1000);
             });
 
             // Инициализация
-            init().then(() => {
-                initCityAutocomplete();
+            checkAuth().then(isAuth => {
+                if (isAuth) {
+                    renderLayers();
+                    initCityAutocomplete();
+                    initBrandAutocomplete();
+                    initModelAutocomplete();
+                }
             });
         })();
     </script>
