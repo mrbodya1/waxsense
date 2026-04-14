@@ -334,19 +334,6 @@
                 this.textContent = section.classList.contains('hidden') ? '▶ ⚙️ Дополнительно' : '▼ ⚙️ Дополнительно';
             });
 
-            // Осадки
-            const precipBtns = document.querySelectorAll('.precip-btn');
-            const precipTypeInput = document.getElementById('precipitationType');
-            const intensityGroup = document.getElementById('intensityGroup');
-            precipBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    precipBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    precipTypeInput.value = btn.dataset.type;
-                    intensityGroup.classList.toggle('hidden', btn.dataset.type === 'none');
-                });
-            });
-
             const intensitySlider = document.getElementById('intensity');
             intensitySlider.addEventListener('input', () => {
                 document.getElementById('intensityValue').textContent = intensityNames[intensitySlider.value - 1];
