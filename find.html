@@ -357,6 +357,8 @@
                     snow_type: snowHidden.value,
                 };
 
+                console.log('🔍 Фильтры поиска:', filters);
+
                 let query = supabase
                     .from('reports')
                     .select(`
@@ -371,13 +373,8 @@
                     .lte('temp_to', filters.temp_to + 5)
                     .limit(15);
 
-                if (filters.country !== 'Любая') query = query.eq('country', filters.country);
-                if (filters.city) query = query.ilike('city', `%${filters.city}%`);
-                if (filters.weather !== 'any') query = query.eq('weather', filters.weather);
-                if (filters.track_condition !== 'any') query = query.eq('track_condition', filters.track_condition);
-                if (filters.snow_type !== 'any') query = query.eq('snow_type', filters.snow_type);
-
                 const { data: reports, error } = await query;
+                console.log('📊 Найдено отчётов:', reports?.length, reports, error);
                 if (error || !reports?.length) {
                     document.getElementById('results').innerHTML = '<p class="text-gray-500 text-center py-8">Отчёты не найдены</p>';
                     return;
