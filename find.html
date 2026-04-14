@@ -239,7 +239,7 @@
                         
                         document.querySelectorAll('#citySuggestions .city-suggestion').forEach(el => {
                             el.addEventListener('click', () => {
-                                cityInput.value = el.dataset.label || el.dataset.name;
+                                cityInput.value = el.dataset.name; // Только название города, без региона
                                 document.getElementById('cityId').value = el.dataset.id;
                                 suggestionsDiv.classList.add('hidden');
                             });
