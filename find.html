@@ -128,27 +128,27 @@
                 <div class="mt-4">
                     <button type="button" id="toggleDetails" class="text-teal-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
                 </div>
-                
+
                 <div id="detailsSection" class="hidden space-y-4 mt-4 pt-4 border-t">
                     <div class="grid grid-cols-3 gap-3">
                         <div><label class="block text-sm mb-1">Темп. снега</label><input type="number" id="snowTemp" class="w-full border rounded-xl p-2"></div>
                         <div><label class="block text-sm mb-1">Влажность %</label><input type="number" id="humidity" min="0" max="100" class="w-full border rounded-xl p-2"></div>
                         <div><label class="block text-sm mb-1">Давление</label><input type="number" id="pressure" class="w-full border rounded-xl p-2"></div>
                     </div>
-                
+
                     <!-- Состояние трассы (слайдер) -->
                     <div>
-                        <label class="block text-sm font-medium mb-1">Состояние трассы: <span id="trackValue">Любое</span></label>
+                        <label class="block text-sm font-medium mb-1">Состояние трассы: <span id="trackValue">🌍 Любое</span></label>
                         <input type="range" id="trackCondition" min="0" max="7" value="0" step="1" class="w-full">
                         <div class="slider-label">
                             <span>🌍</span><span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
                         </div>
                         <input type="hidden" id="trackConditionValue" value="any">
                     </div>
-                
+
                     <!-- Тип снега (слайдер) -->
                     <div>
-                        <label class="block text-sm font-medium mb-1">Тип снега: <span id="snowTypeDisplay">Любой</span></label>
+                        <label class="block text-sm font-medium mb-1">Тип снега: <span id="snowTypeDisplay">🌍 Любой</span></label>
                         <input type="range" id="snowType" min="0" max="6" value="0" step="1" class="w-full">
                         <div class="slider-label">
                             <span>🌍</span><span>Свежий</span><span>Мелкозерн</span><span>Старый</span><span>Мокрый</span><span>Подмерз</span><span>Искусств</span>
@@ -204,32 +204,6 @@
                 await supabase.auth.signOut();
                 window.location.href = 'index.html';
             };
-
-            // Слайдер трассы
-            const trackSlider = document.getElementById('trackCondition');
-            const trackValue = document.getElementById('trackValue');
-            const trackHidden = document.getElementById('trackConditionValue');
-            const trackOptions = ['any', 'Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
-            const trackLabels = ['🌍 Любое', 'Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
-            
-            trackSlider.addEventListener('input', () => {
-                const idx = parseInt(trackSlider.value);
-                trackValue.textContent = trackLabels[idx];
-                trackHidden.value = trackOptions[idx];
-            });
-            
-            // Слайдер снега
-            const snowSlider = document.getElementById('snowType');
-            const snowDisplay = document.getElementById('snowTypeDisplay');
-            const snowHidden = document.getElementById('snowTypeValue');
-            const snowOptions = ['any', 'Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
-            const snowLabels = ['🌍 Любой', 'Свежий', 'Мелкозерн', 'Старый', 'Мокрый', 'Подмерз', 'Искусств'];
-            
-            snowSlider.addEventListener('input', () => {
-                const idx = parseInt(snowSlider.value);
-                snowDisplay.textContent = snowLabels[idx];
-                snowHidden.value = snowOptions[idx];
-            });
 
             // Автокомплит городов
             function initCityAutocomplete() {
@@ -334,6 +308,32 @@
                 weatherInput.value = weatherOptions[idx].value;
             });
 
+            // Слайдер трассы
+            const trackSlider = document.getElementById('trackCondition');
+            const trackValue = document.getElementById('trackValue');
+            const trackHidden = document.getElementById('trackConditionValue');
+            const trackOptions = ['any', 'Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
+            const trackLabels = ['🌍 Любое', 'Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
+
+            trackSlider.addEventListener('input', () => {
+                const idx = parseInt(trackSlider.value);
+                trackValue.textContent = trackLabels[idx];
+                trackHidden.value = trackOptions[idx];
+            });
+
+            // Слайдер снега
+            const snowSlider = document.getElementById('snowType');
+            const snowDisplay = document.getElementById('snowTypeDisplay');
+            const snowHidden = document.getElementById('snowTypeValue');
+            const snowOptions = ['any', 'Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
+            const snowLabels = ['🌍 Любой', 'Свежий', 'Мелкозерн', 'Старый', 'Мокрый', 'Подмерз', 'Искусств'];
+
+            snowSlider.addEventListener('input', () => {
+                const idx = parseInt(snowSlider.value);
+                snowDisplay.textContent = snowLabels[idx];
+                snowHidden.value = snowOptions[idx];
+            });
+
             // Спойлер
             document.getElementById('toggleDetails').addEventListener('click', function() {
                 const section = document.getElementById('detailsSection');
@@ -354,58 +354,69 @@
                     temp_to: parseInt(tempTo.value),
                     weather: weatherInput.value,
                     track_condition: trackHidden.value,
-                    snow_type: snowHidden.value,
+                    snow_type: snowHidden.value
                 };
 
                 console.log('🔍 Фильтры поиска:', filters);
 
+                // Базовый запрос
                 let query = supabase
                     .from('reports')
-                    .select(`*`)
+                    .select(`
+                        id, user_id, start_date, country, city, location_name,
+                        temp_from, temp_to, weather, track_condition, snow_type, comment,
+                        votes_sum, votes_count, rating,
+                        ski_brand, ski_model, ski_base, ski_structure,
+                        wax_layers(wax_brand, wax_name, temp_range, notes)
+                    `)
                     .eq('report_type', filters.report_type);
-                
-                console.log('1️⃣ Только report_type');
-                
-                // Шаг 2: добавляем температуру
-                query = query.gte('temp_from', filters.temp_from - 5);
-                query = query.lte('temp_to', filters.temp_to + 5);
-                console.log('2️⃣ Добавлена температура');
-                
-                // Шаг 3: добавляем страну (если не Любая)
+
+                // Температура: пересечение диапазонов
+                // Отчёт подходит, если его диапазон [temp_from, temp_to] пересекается с фильтром
+                query = query.or(`and(temp_from.gte.${filters.temp_from},temp_from.lte.${filters.temp_to}),and(temp_to.gte.${filters.temp_from},temp_to.lte.${filters.temp_to}),and(temp_from.lte.${filters.temp_from},temp_to.gte.${filters.temp_to})`);
+                console.log('✅ Добавлен фильтр температуры (пересечение диапазонов)');
+
+                // Страна
                 if (filters.country !== 'Любая') {
                     query = query.eq('country', filters.country);
-                    console.log('3️⃣ Добавлена страна:', filters.country);
+                    console.log('✅ Добавлен фильтр страны:', filters.country);
                 }
-                
-                // Шаг 4: добавляем город
+
+                // Город
                 if (filters.city) {
                     query = query.ilike('city', `%${filters.city}%`);
-                    console.log('4️⃣ Добавлен город:', filters.city);
+                    console.log('✅ Добавлен фильтр города:', filters.city);
                 }
-                
-                // Шаг 5: добавляем погоду
+
+                // Место
+                if (filters.location_name) {
+                    query = query.ilike('location_name', `%${filters.location_name}%`);
+                    console.log('✅ Добавлен фильтр места:', filters.location_name);
+                }
+
+                // Погода
                 if (filters.weather !== 'any') {
                     query = query.eq('weather', filters.weather);
-                    console.log('5️⃣ Добавлена погода:', filters.weather);
+                    console.log('✅ Добавлен фильтр погоды:', filters.weather);
                 }
-                
-                // Шаг 6: добавляем трассу
+
+                // Трасса
                 if (filters.track_condition !== 'any') {
                     query = query.eq('track_condition', filters.track_condition);
-                    console.log('6️⃣ Добавлена трасса:', filters.track_condition);
+                    console.log('✅ Добавлен фильтр трассы:', filters.track_condition);
                 }
-                
-                // Шаг 7: добавляем тип снега
+
+                // Тип снега
                 if (filters.snow_type !== 'any') {
                     query = query.eq('snow_type', filters.snow_type);
-                    console.log('7️⃣ Добавлен снег:', filters.snow_type);
+                    console.log('✅ Добавлен фильтр снега:', filters.snow_type);
                 }
-                
+
+                query = query.limit(15);
+
                 const { data: reports, error } = await query;
                 console.log('📊 Найдено отчётов:', reports?.length, error);
 
-                const { data: reports, error } = await query;
-                console.log('📊 Найдено отчётов:', reports?.length, reports, error);
                 if (error || !reports?.length) {
                     document.getElementById('results').innerHTML = '<p class="text-gray-500 text-center py-8">Отчёты не найдены</p>';
                     return;
@@ -548,23 +559,8 @@
                 if (e.target === this) closeModal();
             });
 
-            init().then(() => { initCityAutocomplete(); });
             console.log('✅ Скрипт загружен');
-
-            // Проверяем, что форма найдена
-            const form = document.getElementById('findForm');
-            console.log('📋 Форма найдена:', form);
-            
-            if (form) {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    console.log('🖱️ Форма отправлена!');
-                });
-            }
-            
-            // Проверяем кнопку
-            const btn = document.querySelector('button[type="submit"]');
-            console.log('🔘 Кнопка найдена:', btn);    
+            init().then(() => { initCityAutocomplete(); });
         })();
     </script>
 </body>
