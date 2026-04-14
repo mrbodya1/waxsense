@@ -13,6 +13,24 @@
         .suggestion-item { transition: background-color 0.15s; }
         .suggestion-item:hover { background-color: #f0fdfa !important; }
         .suggestion-item.bg-teal-100 { background-color: #ccfbf1; }
+        .weather-btn {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .weather-btn.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .weather-btn span {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -42,7 +60,16 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Страна</label>
-                            <input type="text" id="country" placeholder="Россия" required class="w-full border rounded-xl p-3">
+                            <select id="country" class="w-full border rounded-xl p-3">
+                                <option value="Россия" selected>🇷🇺 Россия</option>
+                                <option value="Финляндия">🇫🇮 Финляндия</option>
+                                <option value="Швеция">🇸🇪 Швеция</option>
+                                <option value="Норвегия">🇳🇴 Норвегия</option>
+                                <option value="Эстония">🇪🇪 Эстония</option>
+                                <option value="Казахстан">🇰🇿 Казахстан</option>
+                                <option value="Беларусь">🇧🇾 Беларусь</option>
+                                <option value="Другая">🌍 Другая</option>
+                            </select>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
@@ -58,13 +85,36 @@
                             <input type="text" id="locationName" placeholder="Лужники" required class="w-full border rounded-xl p-3">
                         </div>
                     </div>
+                </div>
 
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Температура воздуха: <span id="airTempValue">-5</span>°C</label>
-                        <input type="range" id="airTemp" min="-30" max="15" value="-5" step="1" class="w-full">
-                        <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                <!-- 2. ПОГОДА -->
+                <div class="border rounded-lg p-4 bg-gray-50 mt-4">
+                    <h2 class="font-semibold mb-3">🌡️ Погодные условия</h2>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура от: <span id="tempFromValue">-5</span>°C</label>
+                            <input type="range" id="tempFrom" min="-30" max="15" value="-5" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура до: <span id="tempToValue">-2</span>°C</label>
+                            <input type="range" id="tempTo" min="-30" max="15" value="-2" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
                     </div>
-
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-2">Погода</label>
+                        <div class="grid grid-cols-4 gap-2" id="weatherGroup">
+                            <div class="weather-btn active" data-weather="sunny"><span>☀️</span>Солнечно</div>
+                            <div class="weather-btn" data-weather="cloudy"><span>⛅</span>Облачно</div>
+                            <div class="weather-btn" data-weather="overcast"><span>☁️</span>Пасмурно</div>
+                            <div class="weather-btn" data-weather="snow"><span>🌨️</span>Снегопад</div>
+                        </div>
+                        <input type="hidden" id="weather" value="sunny">
+                    </div>
+                    
                     <div>
                         <label class="block text-sm font-medium mb-1">Состояние <span id="trackLabel">трассы</span>: <span id="trackValue">Жесткая</span></label>
                         <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
@@ -94,7 +144,6 @@
                         </div>
                     </div>
 
-                    <!-- ЛЫЖИ: Бренд и Модель с автокомплитом -->
                     <div class="grid grid-cols-2 gap-3">
                         <div class="relative">
                             <label class="block text-sm mb-1">Бренд лыж</label>
@@ -147,13 +196,9 @@
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // Проверка авторизации
             async function checkAuth() {
                 const { data: { user } } = await supabase.auth.getUser();
-                if (!user) {
-                    window.location.href = 'auth.html';
-                    return false;
-                }
+                if (!user) { window.location.href = 'auth.html'; return false; }
                 return true;
             }
 
@@ -170,26 +215,48 @@
             const waxTitle = document.getElementById('waxSectionTitle');
 
             tabGlide.addEventListener('click', () => {
-                tabGlide.classList.add('active');
-                tabGrip.classList.remove('active');
-                reportType.value = 'glide';
-                trackLabel.textContent = 'трассы';
-                waxTitle.textContent = '🧴 Смазка (скольжение)';
-                updateLayerLabels();
+                tabGlide.classList.add('active'); tabGrip.classList.remove('active');
+                reportType.value = 'glide'; trackLabel.textContent = 'трассы';
+                waxTitle.textContent = '🧴 Смазка (скольжение)'; updateLayerLabels();
             });
 
             tabGrip.addEventListener('click', () => {
-                tabGrip.classList.add('active');
-                tabGlide.classList.remove('active');
-                reportType.value = 'grip';
-                trackLabel.textContent = 'лыжни';
-                waxTitle.textContent = '🎯 Смазка (держание)';
-                updateLayerLabels();
+                tabGrip.classList.add('active'); tabGlide.classList.remove('active');
+                reportType.value = 'grip'; trackLabel.textContent = 'лыжни';
+                waxTitle.textContent = '🎯 Смазка (держание)'; updateLayerLabels();
             });
 
-            const airTemp = document.getElementById('airTemp');
-            document.getElementById('airTemp').addEventListener('input', () => {
-                document.getElementById('airTempValue').textContent = airTemp.value;
+            // Слайдеры температуры
+            const tempFrom = document.getElementById('tempFrom');
+            const tempTo = document.getElementById('tempTo');
+            const tempFromValue = document.getElementById('tempFromValue');
+            const tempToValue = document.getElementById('tempToValue');
+
+            tempFrom.addEventListener('input', () => {
+                tempFromValue.textContent = tempFrom.value;
+                if (parseInt(tempFrom.value) > parseInt(tempTo.value)) {
+                    tempTo.value = tempFrom.value;
+                    tempToValue.textContent = tempFrom.value;
+                }
+            });
+
+            tempTo.addEventListener('input', () => {
+                tempToValue.textContent = tempTo.value;
+                if (parseInt(tempTo.value) < parseInt(tempFrom.value)) {
+                    tempFrom.value = tempTo.value;
+                    tempFromValue.textContent = tempTo.value;
+                }
+            });
+
+            // Кнопки погоды
+            const weatherBtns = document.querySelectorAll('.weather-btn');
+            const weatherInput = document.getElementById('weather');
+            weatherBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    weatherBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    weatherInput.value = btn.dataset.weather;
+                });
             });
 
             const trackSlider = document.getElementById('trackCondition');
@@ -220,64 +287,30 @@
                 });
             }
 
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ БРЕНДОВ СМАЗОК
-            // =============================================
+            // Автокомплиты для смазок
             function initWaxBrandAutocomplete(inputId, suggestionsId, brandIdInput, isCustomInput) {
                 const input = document.getElementById(inputId);
                 const suggestionsDiv = document.getElementById(suggestionsId);
                 const brandIdField = document.getElementById(brandIdInput);
                 const isCustomField = document.getElementById(isCustomInput);
-                
                 let debounceTimer;
                 
                 input.addEventListener('input', async (e) => {
                     clearTimeout(debounceTimer);
                     const query = e.target.value.trim();
-                    
-                    if (query.length < 1) {
-                        suggestionsDiv.classList.add('hidden');
-                        return;
-                    }
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
                     
                     debounceTimer = setTimeout(async () => {
-                        const { data: brands } = await supabase
-                            .from('wax_brands')
-                            .select('id, name')
-                            .ilike('name', `${query}%`)
-                            .order('sort_order')
-                            .limit(8);
-                        
-                        const { data: userBrands } = await supabase
-                            .from('user_wax_brands')
-                            .select('id, name')
-                            .ilike('name', `${query}%`)
-                            .eq('status', 'approved')
-                            .limit(5);
-                        
+                        const { data: brands } = await supabase.from('wax_brands').select('id, name').ilike('name', `${query}%`).order('sort_order').limit(8);
+                        const { data: userBrands } = await supabase.from('user_wax_brands').select('id, name').ilike('name', `${query}%`).eq('status', 'approved').limit(5);
                         const allBrands = [...(brands || []), ...(userBrands || [])];
                         
                         if (allBrands.length === 0) {
-                            suggestionsDiv.innerHTML = `
-                                <div class="p-3 text-sm">
-                                    <p class="text-gray-500 mb-2">Бренд не найден</p>
-                                    <button type="button" onclick="window.addCustomWaxBrand('${inputId}', '${query.replace(/'/g, "\\'")}')" 
-                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
-                                        + Добавить новый бренд "${query}"
-                                    </button>
-                                </div>
-                            `;
-                            suggestionsDiv.classList.remove('hidden');
-                            return;
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Бренд не найден</p><button type="button" onclick="window.addCustomWaxBrand('${inputId}', '${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новый бренд "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
                         }
                         
-                        suggestionsDiv.innerHTML = allBrands.map(b => `
-                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
-                                 data-id="${b.id}" data-name="${b.name}">
-                                <span class="font-medium">${b.name}</span>
-                            </div>
-                        `).join('');
-                        
+                        suggestionsDiv.innerHTML = allBrands.map(b => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${b.id}" data-name="${b.name}"><span class="font-medium">${b.name}</span></div>`).join('');
                         suggestionsDiv.classList.remove('hidden');
                         
                         suggestionsDiv.querySelectorAll('.suggestion-item').forEach(el => {
@@ -292,80 +325,39 @@
                 });
                 
                 document.addEventListener('click', (e) => {
-                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
+                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
                 });
             }
 
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ НАЗВАНИЙ СМАЗОК
-            // =============================================
             function initWaxProductAutocomplete(inputId, suggestionsId, productIdInput, isCustomInput, brandInputId) {
                 const input = document.getElementById(inputId);
                 const suggestionsDiv = document.getElementById(suggestionsId);
                 const productIdField = document.getElementById(productIdInput);
                 const isCustomField = document.getElementById(isCustomInput);
                 const brandInput = document.getElementById(brandInputId);
-                
                 let debounceTimer;
                 
                 input.addEventListener('input', async (e) => {
                     clearTimeout(debounceTimer);
                     const query = e.target.value.trim();
                     const brandName = brandInput.value;
-                    
-                    if (query.length < 1) {
-                        suggestionsDiv.classList.add('hidden');
-                        return;
-                    }
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
                     
                     debounceTimer = setTimeout(async () => {
                         let allProducts = [];
-                        
                         if (brandName) {
-                            const { data: products } = await supabase
-                                .from('wax_products')
-                                .select('id, name, wax_brands!inner(name)')
-                                .ilike('name', `${query}%`)
-                                .eq('wax_brands.name', brandName)
-                                .limit(8);
+                            const { data: products } = await supabase.from('wax_products').select('id, name, wax_brands!inner(name)').ilike('name', `${query}%`).eq('wax_brands.name', brandName).limit(8);
                             allProducts = products || [];
                         }
-                        
-                        const { data: userProducts } = await supabase
-                            .from('user_wax_products')
-                            .select('id, product_name')
-                            .ilike('product_name', `${query}%`)
-                            .eq('status', 'approved')
-                            .eq('brand_name', brandName)
-                            .limit(5);
-                        
-                        if (userProducts) {
-                            allProducts = [...allProducts, ...userProducts.map(p => ({ id: p.id, name: p.product_name }))];
-                        }
+                        const { data: userProducts } = await supabase.from('user_wax_products').select('id, product_name').ilike('product_name', `${query}%`).eq('status', 'approved').eq('brand_name', brandName).limit(5);
+                        if (userProducts) allProducts = [...allProducts, ...userProducts.map(p => ({ id: p.id, name: p.product_name }))];
                         
                         if (allProducts.length === 0) {
-                            suggestionsDiv.innerHTML = `
-                                <div class="p-3 text-sm">
-                                    <p class="text-gray-500 mb-2">Смазка не найдена</p>
-                                    <button type="button" onclick="window.addCustomWaxProduct('${inputId}', '${query.replace(/'/g, "\\'")}')" 
-                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
-                                        + Добавить новую смазку "${query}"
-                                    </button>
-                                </div>
-                            `;
-                            suggestionsDiv.classList.remove('hidden');
-                            return;
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Смазка не найдена</p><button type="button" onclick="window.addCustomWaxProduct('${inputId}', '${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новую смазку "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
                         }
                         
-                        suggestionsDiv.innerHTML = allProducts.map(p => `
-                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
-                                 data-id="${p.id}" data-name="${p.name}">
-                                <span class="font-medium">${p.name}</span>
-                            </div>
-                        `).join('');
-                        
+                        suggestionsDiv.innerHTML = allProducts.map(p => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${p.id}" data-name="${p.name}"><span class="font-medium">${p.name}</span></div>`).join('');
                         suggestionsDiv.classList.remove('hidden');
                         
                         suggestionsDiv.querySelectorAll('.suggestion-item').forEach(el => {
@@ -380,49 +372,26 @@
                 });
                 
                 document.addEventListener('click', (e) => {
-                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
+                    if (!input.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
                 });
             }
 
-            // =============================================
-            // ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЬСКОГО БРЕНДА СМАЗКИ
-            // =============================================
             window.addCustomWaxBrand = async function(inputId, brandName) {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { alert('Войдите в систему'); return; }
-                
-                const { error } = await supabase
-                    .from('user_wax_brands')
-                    .insert({ user_id: user.id, name: brandName, status: 'pending' });
-                
-                if (error) {
-                    if (error.code === '23505') alert('Этот бренд уже есть в базе или ожидает модерации');
-                    else alert('Не удалось добавить бренд');
-                    return;
-                }
-                
+                const { error } = await supabase.from('user_wax_brands').insert({ user_id: user.id, name: brandName, status: 'pending' });
+                if (error) { alert(error.code === '23505' ? 'Этот бренд уже есть или ожидает модерации' : 'Не удалось добавить бренд'); return; }
                 document.getElementById(inputId).value = brandName;
                 alert(`Бренд "${brandName}" отправлен на модерацию`);
             };
 
-            // =============================================
-            // ДОБАВЛЕНИЕ ПОЛЬЗОВАТЕЛЬСКОЙ СМАЗКИ
-            // =============================================
             window.addCustomWaxProduct = async function(inputId, productName) {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { alert('Войдите в систему'); return; }
-                
                 const brandName = document.querySelector(`[id^="${inputId.replace('Name', 'Brand')}"]`)?.value;
                 if (!brandName) { alert('Сначала укажите бренд'); return; }
-                
-                const { error } = await supabase
-                    .from('user_wax_products')
-                    .insert({ user_id: user.id, brand_name: brandName, product_name: productName, status: 'pending' });
-                
+                const { error } = await supabase.from('user_wax_products').insert({ user_id: user.id, brand_name: brandName, product_name: productName, status: 'pending' });
                 if (error) { alert('Не удалось добавить смазку'); return; }
-                
                 document.getElementById(inputId).value = productName;
                 alert(`Смазка "${productName}" отправлена на модерацию`);
             };
@@ -451,14 +420,12 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div class="relative">
                                     <input type="text" id="${brandInputId}" placeholder="Бренд" class="layer-brand border rounded-lg p-2" autocomplete="off">
-                                    <input type="hidden" id="${brandIdId}">
-                                    <input type="hidden" id="${isCustomBrandId}" value="false">
+                                    <input type="hidden" id="${brandIdId}"><input type="hidden" id="${isCustomBrandId}" value="false">
                                     <div id="${brandSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                                 </div>
                                 <div class="relative">
                                     <input type="text" id="${nameInputId}" placeholder="Название" class="layer-name border rounded-lg p-2" autocomplete="off">
-                                    <input type="hidden" id="${nameIdId}">
-                                    <input type="hidden" id="${isCustomNameId}" value="false">
+                                    <input type="hidden" id="${nameIdId}"><input type="hidden" id="${isCustomNameId}" value="false">
                                     <div id="${nameSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                                 </div>
                                 <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2">
@@ -469,27 +436,12 @@
                 }
                 
                 for (let i = 0; i < layerCount; i++) {
-                    initWaxBrandAutocomplete(
-                        `layer${i}WaxBrandInput`,
-                        `layer${i}BrandSuggestions`,
-                        `layer${i}WaxBrandId`,
-                        `layer${i}IsCustomBrand`
-                    );
-                    initWaxProductAutocomplete(
-                        `layer${i}WaxNameInput`,
-                        `layer${i}NameSuggestions`,
-                        `layer${i}WaxNameId`,
-                        `layer${i}IsCustomName`,
-                        `layer${i}WaxBrandInput`
-                    );
+                    initWaxBrandAutocomplete(`layer${i}WaxBrandInput`, `layer${i}BrandSuggestions`, `layer${i}WaxBrandId`, `layer${i}IsCustomBrand`);
+                    initWaxProductAutocomplete(`layer${i}WaxNameInput`, `layer${i}NameSuggestions`, `layer${i}WaxNameId`, `layer${i}IsCustomName`, `layer${i}WaxBrandInput`);
                 }
                 
                 document.querySelectorAll('.remove-layer').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        layerCount--;
-                        renderLayers();
-                        updateLayerLabels();
-                    });
+                    btn.addEventListener('click', () => { layerCount--; renderLayers(); updateLayerLabels(); });
                 });
             }
 
@@ -497,49 +449,29 @@
                 if (layerCount < 3) { layerCount++; renderLayers(); updateLayerLabels(); }
             });
 
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ ГОРОДОВ
-            // =============================================
+            // Автокомплит городов
             function initCityAutocomplete() {
                 const cityInput = document.getElementById('cityInput');
                 const suggestionsDiv = document.getElementById('citySuggestions');
-                
                 let debounceTimer;
-                let selectedIndex = -1;
                 
                 cityInput.addEventListener('input', async (e) => {
                     clearTimeout(debounceTimer);
                     const query = e.target.value.trim();
-                    
-                    if (query.length < 2) {
-                        suggestionsDiv.classList.add('hidden');
-                        return;
-                    }
+                    if (query.length < 2) { suggestionsDiv.classList.add('hidden'); return; }
                     
                     debounceTimer = setTimeout(async () => {
-                        const { data: cities } = await supabase
-                            .from('cities')
-                            .select('id, name, region_name, population, label')
-                            .ilike('name', `${query}%`)
-                            .order('population', { ascending: false })
-                            .limit(8);
-                        
+                        const { data: cities } = await supabase.from('cities').select('id, name, region_name, population, label').ilike('name', `${query}%`).order('population', { ascending: false }).limit(8);
                         if (!cities || cities.length === 0) {
                             suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Город не найден</div>';
-                            suggestionsDiv.classList.remove('hidden');
-                            return;
+                            suggestionsDiv.classList.remove('hidden'); return;
                         }
                         
-                        suggestionsDiv.innerHTML = cities.map((city, index) => `
-                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" 
-                                 data-id="${city.id}" data-name="${city.name}" data-region="${city.region_name}" data-label="${city.label}">
-                                <span>
-                                    <span class="font-medium">${city.name}</span>
-                                    <span class="text-sm text-gray-500 ml-2">${city.region_name}</span>
-                                </span>
+                        suggestionsDiv.innerHTML = cities.map(city => `
+                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" data-id="${city.id}" data-name="${city.name}" data-region="${city.region_name}" data-label="${city.label}">
+                                <span><span class="font-medium">${city.name}</span><span class="text-sm text-gray-500 ml-2">${city.region_name}</span></span>
                             </div>
                         `).join('');
-                        
                         suggestionsDiv.classList.remove('hidden');
                         
                         document.querySelectorAll('#citySuggestions .suggestion-item').forEach(el => {
@@ -554,70 +486,34 @@
                 });
                 
                 document.addEventListener('click', (e) => {
-                    if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
+                    if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
                 });
             }
 
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ БРЕНДОВ ЛЫЖ
-            // =============================================
+            // Автокомплит брендов лыж
             function initBrandAutocomplete() {
                 const brandInput = document.getElementById('skiBrandInput');
                 const suggestionsDiv = document.getElementById('brandSuggestions');
                 const brandIdInput = document.getElementById('skiBrandId');
                 const isCustomBrand = document.getElementById('isCustomBrand');
-                
                 let debounceTimer;
                 
                 brandInput.addEventListener('input', async (e) => {
                     clearTimeout(debounceTimer);
                     const query = e.target.value.trim();
-                    
-                    if (query.length < 1) {
-                        suggestionsDiv.classList.add('hidden');
-                        return;
-                    }
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
                     
                     debounceTimer = setTimeout(async () => {
-                        const { data: brands } = await supabase
-                            .from('ski_brands')
-                            .select('id, name')
-                            .ilike('name', `${query}%`)
-                            .order('sort_order')
-                            .limit(8);
-                        
-                        const { data: userBrands } = await supabase
-                            .from('user_ski_brands')
-                            .select('id, name')
-                            .ilike('name', `${query}%`)
-                            .eq('status', 'approved')
-                            .limit(5);
-                        
+                        const { data: brands } = await supabase.from('ski_brands').select('id, name').ilike('name', `${query}%`).order('sort_order').limit(8);
+                        const { data: userBrands } = await supabase.from('user_ski_brands').select('id, name').ilike('name', `${query}%`).eq('status', 'approved').limit(5);
                         const allBrands = [...(brands || []), ...(userBrands || [])];
                         
                         if (allBrands.length === 0) {
-                            suggestionsDiv.innerHTML = `
-                                <div class="p-3 text-sm">
-                                    <p class="text-gray-500 mb-2">Бренд не найден</p>
-                                    <button type="button" onclick="window.addCustomSkiBrand('${query.replace(/'/g, "\\'")}')" 
-                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
-                                        + Добавить новый бренд "${query}"
-                                    </button>
-                                </div>
-                            `;
-                            suggestionsDiv.classList.remove('hidden');
-                            return;
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Бренд не найден</p><button type="button" onclick="window.addCustomSkiBrand('${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новый бренд "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
                         }
                         
-                        suggestionsDiv.innerHTML = allBrands.map(b => `
-                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
-                                 data-id="${b.id}" data-name="${b.name}">
-                                <span class="font-medium">${b.name}</span>
-                            </div>
-                        `).join('');
-                        
+                        suggestionsDiv.innerHTML = allBrands.map(b => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${b.id}" data-name="${b.name}"><span class="font-medium">${b.name}</span></div>`).join('');
                         suggestionsDiv.classList.remove('hidden');
                         
                         document.querySelectorAll('#brandSuggestions .suggestion-item').forEach(el => {
@@ -633,26 +529,15 @@
                 });
                 
                 document.addEventListener('click', (e) => {
-                    if (!brandInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
+                    if (!brandInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
                 });
             }
 
             window.addCustomSkiBrand = async function(brandName) {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { alert('Войдите в систему'); return; }
-                
-                const { error } = await supabase
-                    .from('user_ski_brands')
-                    .insert({ user_id: user.id, name: brandName, status: 'pending' });
-                
-                if (error) {
-                    if (error.code === '23505') alert('Этот бренд уже есть в базе или ожидает модерации');
-                    else alert('Не удалось добавить бренд');
-                    return;
-                }
-                
+                const { error } = await supabase.from('user_ski_brands').insert({ user_id: user.id, name: brandName, status: 'pending' });
+                if (error) { alert(error.code === '23505' ? 'Этот бренд уже есть или ожидает модерации' : 'Не удалось добавить бренд'); return; }
                 document.getElementById('skiBrandInput').value = brandName;
                 document.getElementById('isCustomBrand').value = 'true';
                 document.getElementById('brandSuggestions').classList.add('hidden');
@@ -660,76 +545,38 @@
             };
 
             async function loadModelsForBrand(brandId) {
-                const { data: models } = await supabase
-                    .from('ski_models')
-                    .select('id, name')
-                    .eq('brand_id', brandId)
-                    .order('sort_order');
-                
+                const { data: models } = await supabase.from('ski_models').select('id, name').eq('brand_id', brandId).order('sort_order');
                 window.currentBrandModels = models || [];
             }
 
-            // =============================================
-            // АВТОКОМПЛИТ ДЛЯ МОДЕЛЕЙ ЛЫЖ
-            // =============================================
+            // Автокомплит моделей лыж
             function initModelAutocomplete() {
                 const modelInput = document.getElementById('skiModelInput');
                 const suggestionsDiv = document.getElementById('modelSuggestions');
                 const modelIdInput = document.getElementById('skiModelId');
                 const isCustomModel = document.getElementById('isCustomModel');
-                
                 let debounceTimer;
                 
                 modelInput.addEventListener('input', async (e) => {
                     clearTimeout(debounceTimer);
                     const query = e.target.value.trim();
                     const brandName = document.getElementById('skiBrandInput').value;
-                    
-                    if (query.length < 1) {
-                        suggestionsDiv.classList.add('hidden');
-                        return;
-                    }
+                    if (query.length < 1) { suggestionsDiv.classList.add('hidden'); return; }
                     
                     debounceTimer = setTimeout(async () => {
                         let allModels = [];
-                        
                         if (window.currentBrandModels) {
-                            allModels = window.currentBrandModels.filter(m => 
-                                m.name.toLowerCase().includes(query.toLowerCase())
-                            );
+                            allModels = window.currentBrandModels.filter(m => m.name.toLowerCase().includes(query.toLowerCase()));
                         }
-                        
-                        const { data: userModels } = await supabase
-                            .from('user_ski_models')
-                            .select('id, model_name, brand_name')
-                            .ilike('model_name', `${query}%`)
-                            .eq('status', 'approved');
-                        
-                        if (brandName && userModels) {
-                            allModels = [...allModels, ...userModels.filter(m => m.brand_name === brandName)];
-                        }
+                        const { data: userModels } = await supabase.from('user_ski_models').select('id, model_name, brand_name').ilike('model_name', `${query}%`).eq('status', 'approved');
+                        if (brandName && userModels) allModels = [...allModels, ...userModels.filter(m => m.brand_name === brandName)];
                         
                         if (allModels.length === 0) {
-                            suggestionsDiv.innerHTML = `
-                                <div class="p-3 text-sm">
-                                    <p class="text-gray-500 mb-2">Модель не найдена</p>
-                                    <button type="button" onclick="window.addCustomSkiModel('${query.replace(/'/g, "\\'")}')" 
-                                            class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm hover:bg-teal-100">
-                                        + Добавить новую модель "${query}"
-                                    </button>
-                                </div>
-                            `;
-                            suggestionsDiv.classList.remove('hidden');
-                            return;
+                            suggestionsDiv.innerHTML = `<div class="p-3 text-sm"><p class="text-gray-500 mb-2">Модель не найдена</p><button type="button" onclick="window.addCustomSkiModel('${query.replace(/'/g, "\\'")}')" class="w-full bg-teal-50 text-teal-700 px-3 py-2 rounded-lg text-sm">+ Добавить новую модель "${query}"</button></div>`;
+                            suggestionsDiv.classList.remove('hidden'); return;
                         }
                         
-                        suggestionsDiv.innerHTML = allModels.map(m => `
-                            <div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" 
-                                 data-id="${m.id}" data-name="${m.name || m.model_name}">
-                                <span class="font-medium">${m.name || m.model_name}</span>
-                            </div>
-                        `).join('');
-                        
+                        suggestionsDiv.innerHTML = allModels.map(m => `<div class="suggestion-item px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0" data-id="${m.id}" data-name="${m.name || m.model_name}"><span class="font-medium">${m.name || m.model_name}</span></div>`).join('');
                         suggestionsDiv.classList.remove('hidden');
                         
                         document.querySelectorAll('#modelSuggestions .suggestion-item').forEach(el => {
@@ -744,41 +591,30 @@
                 });
                 
                 document.addEventListener('click', (e) => {
-                    if (!modelInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                        suggestionsDiv.classList.add('hidden');
-                    }
+                    if (!modelInput.contains(e.target) && !suggestionsDiv.contains(e.target)) suggestionsDiv.classList.add('hidden');
                 });
             }
 
             window.addCustomSkiModel = async function(modelName) {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { alert('Войдите в систему'); return; }
-                
                 const brandName = document.getElementById('skiBrandInput').value;
                 if (!brandName) { alert('Сначала укажите бренд'); return; }
-                
-                const { error } = await supabase
-                    .from('user_ski_models')
-                    .insert({ user_id: user.id, brand_name: brandName, model_name: modelName, status: 'pending' });
-                
+                const { error } = await supabase.from('user_ski_models').insert({ user_id: user.id, brand_name: brandName, model_name: modelName, status: 'pending' });
                 if (error) { alert('Не удалось добавить модель'); return; }
-                
                 document.getElementById('skiModelInput').value = modelName;
                 document.getElementById('isCustomModel').value = 'true';
                 document.getElementById('modelSuggestions').classList.add('hidden');
                 alert(`Модель "${modelName}" отправлена на модерацию`);
             };
 
-            // =============================================
-            // ОТПРАВКА ФОРМЫ
-            // =============================================
+            // Отправка формы
             document.getElementById('reportForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { window.location.href = 'auth.html'; return; }
 
                 const layers = [];
-                
                 for (let i = 0; i < layerCount; i++) {
                     const brandInput = document.getElementById(`layer${i}WaxBrandInput`);
                     const nameInput = document.getElementById(`layer${i}WaxNameInput`);
@@ -807,7 +643,9 @@
                     city: document.getElementById('cityInput').value,
                     city_id: document.getElementById('cityId').value || null,
                     location_name: document.getElementById('locationName').value,
-                    air_temp: parseInt(airTemp.value),
+                    temp_from: parseInt(tempFrom.value),
+                    temp_to: parseInt(tempTo.value),
+                    weather: weatherInput.value,
                     track_condition: trackConditions[trackSlider.value - 1],
                     snow_temp: document.getElementById('snowTemp').value ? parseInt(document.getElementById('snowTemp').value) : null,
                     humidity: document.getElementById('humidity').value ? parseInt(document.getElementById('humidity').value) : null,
