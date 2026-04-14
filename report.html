@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новый отчёт | WaxCrowd</title>
+    <title>Новый отчёт | Waxsense</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
         .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
+        .city-suggestion { transition: background-color 0.15s; }
+        .city-suggestion:hover { background-color: #f0fdfa !important; }
+        .city-suggestion.bg-teal-100 { background-color: #ccfbf1; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
         <div class="max-w-4xl mx-auto px-4 py-3">
-            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
+            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ Waxsense</a>
         </div>
     </nav>
 
@@ -42,9 +45,12 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
+                        <div class="relative">
                             <label class="block text-sm font-medium mb-1">Город</label>
-                            <input type="text" id="city" placeholder="Москва" required class="w-full border rounded-xl p-3">
+                            <input type="text" id="cityInput" placeholder="Начните вводить..." class="w-full border rounded-xl p-3" autocomplete="off">
+                            <input type="hidden" id="cityId">
+                            <input type="hidden" id="cityRegion">
+                            <div id="citySuggestions" class="absolute z-50 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Место старта</label>
@@ -227,13 +233,161 @@
                 if (layerCount < 3) { layerCount++; renderLayers(); updateLayerLabels(); }
             });
 
+            // =============================================
+            // АВТОКОМПЛИТ ДЛЯ ГОРОДОВ (T9)
+            // =============================================
+            function initCityAutocomplete() {
+                const cityInput = document.getElementById('cityInput');
+                const suggestionsDiv = document.getElementById('citySuggestions');
+                
+                let debounceTimer;
+                let selectedIndex = -1;
+                let currentSuggestions = [];
+                
+                cityInput.addEventListener('input', async (e) => {
+                    clearTimeout(debounceTimer);
+                    const query = e.target.value.trim();
+                    
+                    if (query.length < 2) {
+                        suggestionsDiv.classList.add('hidden');
+                        currentSuggestions = [];
+                        return;
+                    }
+                    
+                    debounceTimer = setTimeout(async () => {
+                        try {
+                            const { data: cities, error } = await supabase
+                                .from('cities')
+                                .select('id, name, region_name, population, label')
+                                .ilike('name', `${query}%`)
+                                .order('population', { ascending: false })
+                                .limit(8);
+                            
+                            if (error) throw error;
+                            
+                            currentSuggestions = cities || [];
+                            renderSuggestions(currentSuggestions);
+                            
+                        } catch (err) {
+                            console.error('Ошибка поиска городов:', err);
+                        }
+                    }, 300);
+                });
+                
+                function renderSuggestions(cities) {
+                    if (!cities || cities.length === 0) {
+                        performFuzzySearch(cityInput.value.trim());
+                        return;
+                    }
+                    
+                    suggestionsDiv.innerHTML = cities.map((city, index) => `
+                        <div class="city-suggestion px-4 py-2 hover:bg-teal-50 cursor-pointer border-b last:border-0 flex justify-between items-center" 
+                             data-index="${index}"
+                             data-id="${city.id}"
+                             data-name="${city.name}"
+                             data-region="${city.region_name}"
+                             data-label="${city.label}">
+                            <span>
+                                <span class="font-medium">${city.name}</span>
+                                <span class="text-sm text-gray-500 ml-2">${city.region_name}</span>
+                            </span>
+                            <span class="text-xs text-gray-400">${city.population ? Math.round(city.population / 1000) + 'k' : ''}</span>
+                        </div>
+                    `).join('');
+                    
+                    suggestionsDiv.classList.remove('hidden');
+                    selectedIndex = -1;
+                    
+                    document.querySelectorAll('.city-suggestion').forEach(el => {
+                        el.addEventListener('click', () => {
+                            selectCity(el.dataset);
+                        });
+                    });
+                }
+                
+                async function performFuzzySearch(query) {
+                    if (query.length < 3) {
+                        suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Введите ещё пару букв...</div>';
+                        suggestionsDiv.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    const { data: cities } = await supabase
+                        .from('cities')
+                        .select('id, name, region_name, population, label')
+                        .ilike('name', `%${query}%`)
+                        .order('population', { ascending: false })
+                        .limit(8);
+                    
+                    if (!cities || cities.length === 0) {
+                        suggestionsDiv.innerHTML = '<div class="px-4 py-2 text-gray-500">Город не найден</div>';
+                        suggestionsDiv.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    currentSuggestions = cities;
+                    renderSuggestions(cities);
+                }
+                
+                function selectCity(data) {
+                    cityInput.value = data.label || `${data.name} (${data.region})`;
+                    document.getElementById('cityId').value = data.id;
+                    document.getElementById('cityRegion').value = data.region;
+                    suggestionsDiv.classList.add('hidden');
+                }
+                
+                cityInput.addEventListener('keydown', (e) => {
+                    const items = document.querySelectorAll('.city-suggestion');
+                    
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                        updateSelection(items);
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, 0);
+                        updateSelection(items);
+                    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                        e.preventDefault();
+                        const selected = items[selectedIndex];
+                        if (selected) selectCity(selected.dataset);
+                    } else if (e.key === 'Escape') {
+                        suggestionsDiv.classList.add('hidden');
+                    }
+                });
+                
+                function updateSelection(items) {
+                    items.forEach((item, i) => {
+                        if (i === selectedIndex) {
+                            item.classList.add('bg-teal-100');
+                            item.scrollIntoView({ block: 'nearest' });
+                        } else {
+                            item.classList.remove('bg-teal-100');
+                        }
+                    });
+                }
+                
+                document.addEventListener('click', (e) => {
+                    if (!cityInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                        suggestionsDiv.classList.add('hidden');
+                    }
+                });
+                
+                cityInput.addEventListener('focus', () => {
+                    if (cityInput.value.length >= 2 && currentSuggestions.length > 0) {
+                        suggestionsDiv.classList.remove('hidden');
+                    }
+                });
+            }
+
+            // Отправка формы
             document.getElementById('reportForm').addEventListener('submit', async (e) => {
-                 e.preventDefault();
-                 const { data: { user } } = await supabase.auth.getUser();
-                 if (!user) {
-                     window.location.href = 'auth.html';
-                       return;
-                 }
+                e.preventDefault();
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
 
                 const layers = [];
                 const brands = document.querySelectorAll('.layer-brand');
@@ -264,7 +418,8 @@
                     report_type: reportType.value,
                     start_date: document.getElementById('startDate').value,
                     country: document.getElementById('country').value,
-                    city: document.getElementById('city').value,
+                    city: document.getElementById('cityInput').value,
+                    city_id: document.getElementById('cityId').value || null,
                     location_name: document.getElementById('locationName').value,
                     air_temp: parseInt(airTemp.value),
                     track_condition: trackConditions[trackSlider.value - 1],
@@ -295,10 +450,11 @@
                 setTimeout(() => window.location.href = 'index.html', 1000);
             });
 
-                        // Проверяем авторизацию перед загрузкой
+            // Инициализация
             checkAuth().then(isAuth => {
                 if (isAuth) {
                     renderLayers();
+                    initCityAutocomplete();
                 }
             });
         })();
