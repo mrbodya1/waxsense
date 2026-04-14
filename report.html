@@ -3,40 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новый отчёт | Waxsense</title>
+    <title>Новый отчёт | WaxCrowd</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
-        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: #6b7280; }
+        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 13px; color: #6b7280; }
         .suggestion-item { transition: background-color 0.15s; }
         .suggestion-item:hover { background-color: #f0fdfa !important; }
         .suggestion-item.bg-teal-100 { background-color: #ccfbf1; }
-        .weather-btn {
-            padding: 8px 4px;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-        }
-        .weather-btn.active {
-            border-color: #2563eb;
-            background: #eff6ff;
-        }
-        .weather-btn span {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 4px;
-        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
         <div class="max-w-4xl mx-auto px-4 py-3">
-            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ Waxsense</a>
+            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
         </div>
     </nav>
 
@@ -87,15 +69,32 @@
                     </div>
                 </div>
 
-                <!-- Погода (слайдер) -->
-                <div>
-                    <label class="block text-sm font-medium mb-1">Погода: <span id="weatherValue">☀️ Солнечно</span></label>
-                    <input type="range" id="weatherSlider" min="1" max="7" value="1" step="1" class="w-full">
-                    <div class="slider-label">
-                        <span>☀️</span><span>⛅</span><span>☁️</span><span>🌨️</span><span>❄️</span><span>🌧️</span><span>🌨️</span>
+                <!-- 2. ПОГОДА -->
+                <div class="border rounded-lg p-4 bg-gray-50 mt-4">
+                    <h2 class="font-semibold mb-3">🌡️ Погодные условия</h2>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура от: <span id="tempFromValue">-5</span>°C</label>
+                            <input type="range" id="tempFrom" min="-30" max="15" value="-5" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Температура до: <span id="tempToValue">-2</span>°C</label>
+                            <input type="range" id="tempTo" min="-30" max="15" value="-2" step="1" class="w-full">
+                            <div class="slider-label"><span>-30°C</span><span>0°C</span><span>+15°C</span></div>
+                        </div>
                     </div>
-                    <input type="hidden" id="weather" value="sunny">
-                </div>
+                    
+                    <!-- Погода (слайдер) -->
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium mb-1">Погода: <span id="weatherValue">☀️ Солнечно</span></label>
+                        <input type="range" id="weatherSlider" min="1" max="7" value="1" step="1" class="w-full">
+                        <div class="slider-label">
+                            <span>☀️</span><span>⛅</span><span>☁️</span><span>🌨️</span><span>❄️</span><span>🌧️</span><span>🌨️</span>
+                        </div>
+                        <input type="hidden" id="weather" value="sunny">
+                    </div>
                     
                     <div>
                         <label class="block text-sm font-medium mb-1">Состояние <span id="trackLabel">трассы</span>: <span id="trackValue">Жесткая</span></label>
@@ -187,17 +186,6 @@
             let layerCount = 1;
             const trackConditions = ['Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
             const snowTypes = ['Свежевыпавший', 'Мелкозернистый', 'Старый', 'Мокрый', 'Подмерзший зернистый', 'Искусственный'];
-
-            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
-
-            const tabGlide = document.getElementById('tabGlide');
-            const tabGrip = document.getElementById('tabGrip');
-            const reportType = document.getElementById('reportType');
-            const trackLabel = document.getElementById('trackLabel');
-            const waxTitle = document.getElementById('waxSectionTitle');
-            const weatherSlider = document.getElementById('weatherSlider');
-            const weatherValue = document.getElementById('weatherValue');
-            const weatherInput = document.getElementById('weather');
             
             const weatherOptions = [
                 { value: 'sunny', label: '☀️ Солнечно' },
@@ -208,12 +196,14 @@
                 { value: 'rain', label: '🌧️ Дождь' },
                 { value: 'sleet', label: '🌨️ Снег с дождём' }
             ];
-            
-            weatherSlider.addEventListener('input', () => {
-                const idx = weatherSlider.value - 1;
-                weatherValue.textContent = weatherOptions[idx].label;
-                weatherInput.value = weatherOptions[idx].value;
-            });
+
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+
+            const tabGlide = document.getElementById('tabGlide');
+            const tabGrip = document.getElementById('tabGrip');
+            const reportType = document.getElementById('reportType');
+            const trackLabel = document.getElementById('trackLabel');
+            const waxTitle = document.getElementById('waxSectionTitle');
 
             tabGlide.addEventListener('click', () => {
                 tabGlide.classList.add('active'); tabGrip.classList.remove('active');
@@ -249,15 +239,15 @@
                 }
             });
 
-            // Кнопки погоды
-            const weatherBtns = document.querySelectorAll('.weather-btn');
+            // Слайдер погоды
+            const weatherSlider = document.getElementById('weatherSlider');
+            const weatherValue = document.getElementById('weatherValue');
             const weatherInput = document.getElementById('weather');
-            weatherBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    weatherBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    weatherInput.value = btn.dataset.weather;
-                });
+
+            weatherSlider.addEventListener('input', () => {
+                const idx = weatherSlider.value - 1;
+                weatherValue.textContent = weatherOptions[idx].label;
+                weatherInput.value = weatherOptions[idx].value;
             });
 
             const trackSlider = document.getElementById('trackCondition');
