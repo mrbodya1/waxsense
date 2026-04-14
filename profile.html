@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Профиль | WaxCrowd</title>
+    <title>Профиль | Waxsense</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -16,21 +16,15 @@
             transition: transform 0.1s, color 0.15s;
             color: #d1d5db;
         }
-        .snowflake-rating:hover {
-            transform: scale(1.15);
-        }
-        .snowflake-rating.filled {
-            color: #3b82f6;
-        }
-        .snowflake-rating.hovered {
-            color: #60a5fa;
-        }
+        .snowflake-rating:hover { transform: scale(1.15); }
+        .snowflake-rating.filled { color: #3b82f6; }
+        .snowflake-rating.hovered { color: #60a5fa; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
         <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ WaxCrowd</a>
+            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ Waxsense</a>
             <div class="flex gap-4">
                 <a href="index.html" class="text-gray-600">Главная</a>
                 <a href="find.html" class="text-gray-600">Подобрать</a>
@@ -117,6 +111,9 @@
             let currentProfile = null;
             let currentRating = 0;
 
+            const weatherIcons = { sunny: '☀️', cloudy: '⛅', overcast: '☁️', snow: '🌨️' };
+            const weatherNames = { sunny: 'Солнечно', cloudy: 'Облачно', overcast: 'Пасмурно', snow: 'Снегопад' };
+
             async function init() {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) { window.location.href = 'auth.html'; return; }
@@ -164,10 +161,8 @@
             function setActiveTab(tab) {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-                
                 document.getElementById('reportsSection').classList.toggle('hidden', tab !== 'reports');
                 document.getElementById('historySection').classList.toggle('hidden', tab !== 'history');
-                
                 if (tab === 'history') loadHistory();
             }
 
@@ -175,7 +170,7 @@
             async function loadUserReports() {
                 const { data: reports } = await supabase
                     .from('reports')
-                    .select('id, report_type, start_date, country, city, location_name, air_temp, track_condition, comment, snowflakes_total, snowflakes_count')
+                    .select('id, report_type, start_date, country, city, location_name, temp_from, temp_to, weather, track_condition, comment, snowflakes_total, snowflakes_count')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
 
@@ -187,6 +182,7 @@
 
                 container.innerHTML = reports.map(r => {
                     const avg = r.snowflakes_count > 0 ? (r.snowflakes_total / r.snowflakes_count).toFixed(1) : '—';
+                    const weatherIcon = weatherIcons[r.weather] || '';
                     return `
                         <div class="bg-white rounded-xl p-4 shadow-sm border">
                             <div class="flex justify-between">
@@ -194,7 +190,11 @@
                                 <span class="text-blue-500">❄️ ${avg} (${r.snowflakes_count})</span>
                             </div>
                             <div class="text-sm text-gray-600">${r.country}, ${r.city} — ${r.location_name} • ${new Date(r.start_date).toLocaleDateString('ru-RU')}</div>
-                            <div class="text-sm">${r.air_temp}°C • ${r.track_condition}</div>
+                            <div class="text-sm flex items-center gap-2 flex-wrap">
+                                <span>${r.temp_from}…${r.temp_to}°C</span>
+                                ${r.weather ? `<span>${weatherIcon} ${weatherNames[r.weather] || r.weather}</span>` : ''}
+                                <span>• ${r.track_condition}</span>
+                            </div>
                             ${r.comment ? `<p class="text-sm mt-1 text-gray-500">💬 ${r.comment}</p>` : ''}
                         </div>
                     `;
@@ -209,14 +209,13 @@
                         id, viewed_at, rated,
                         reports!inner(
                             id, report_type, start_date, country, city, location_name,
-                            air_temp, track_condition, comment, snowflakes_total, snowflakes_count
+                            temp_from, temp_to, weather, track_condition, comment, snowflakes_total, snowflakes_count
                         )
                     `)
                     .eq('user_id', currentUser.id)
                     .order('viewed_at', { ascending: false });
 
                 const container = document.getElementById('historyList');
-                
                 if (!history?.length) {
                     container.innerHTML = '<div class="text-gray-500 text-center py-8">История пуста</div>';
                     return;
@@ -225,6 +224,7 @@
                 container.innerHTML = history.map(h => {
                     const r = h.reports;
                     const avg = r.snowflakes_count > 0 ? (r.snowflakes_total / r.snowflakes_count).toFixed(1) : '—';
+                    const weatherIcon = weatherIcons[r.weather] || '';
                     
                     return `
                         <div class="bg-white rounded-xl p-4 shadow-sm border">
@@ -235,7 +235,11 @@
                                         <span class="text-sm text-gray-400">• ${new Date(h.viewed_at).toLocaleDateString('ru-RU')}</span>
                                     </div>
                                     <div class="text-sm text-gray-600">${r.country}, ${r.city} — ${r.location_name}</div>
-                                    <div class="text-sm">${r.air_temp}°C • ${r.track_condition}</div>
+                                    <div class="text-sm flex items-center gap-2 flex-wrap">
+                                        <span>${r.temp_from}…${r.temp_to}°C</span>
+                                        ${r.weather ? `<span>${weatherIcon} ${weatherNames[r.weather] || r.weather}</span>` : ''}
+                                        <span>• ${r.track_condition}</span>
+                                    </div>
                                     ${r.comment ? `<p class="text-sm mt-1 text-gray-500">💬 ${r.comment}</p>` : ''}
                                 </div>
                                 <div class="text-right">
@@ -245,9 +249,7 @@
                                                 class="mt-2 text-sm bg-yellow-50 text-yellow-700 px-3 py-1 rounded-lg border border-yellow-200 hover:bg-yellow-100">
                                             ⭐ Оценить
                                         </button>
-                                    ` : `
-                                        <span class="text-sm text-green-600">✓ Оценено</span>
-                                    `}
+                                    ` : `<span class="text-sm text-green-600">✓ Оценено</span>`}
                                 </div>
                             </div>
                         </div>
@@ -274,30 +276,21 @@
                     star.addEventListener('mouseenter', function() {
                         const rating = parseInt(this.dataset.rating);
                         container.querySelectorAll('.snowflake-rating').forEach((s, index) => {
-                            if (index < rating) {
-                                s.classList.add('hovered');
-                            } else {
-                                s.classList.remove('hovered');
-                            }
+                            if (index < rating) s.classList.add('hovered');
+                            else s.classList.remove('hovered');
                         });
                     });
                     
                     star.addEventListener('mouseleave', function() {
-                        container.querySelectorAll('.snowflake-rating').forEach(s => {
-                            s.classList.remove('hovered');
-                        });
+                        container.querySelectorAll('.snowflake-rating').forEach(s => s.classList.remove('hovered'));
                     });
                     
                     star.addEventListener('click', function() {
                         currentRating = parseInt(this.dataset.rating);
                         document.getElementById('ratingValue').value = currentRating;
-                        
                         container.querySelectorAll('.snowflake-rating').forEach((s, index) => {
-                            if (index < currentRating) {
-                                s.classList.add('filled');
-                            } else {
-                                s.classList.remove('filled');
-                            }
+                            if (index < currentRating) s.classList.add('filled');
+                            else s.classList.remove('filled');
                         });
                     });
                     
@@ -305,9 +298,7 @@
                 }
                 
                 container.addEventListener('mouseleave', function() {
-                    container.querySelectorAll('.snowflake-rating').forEach(s => {
-                        s.classList.remove('hovered');
-                    });
+                    container.querySelectorAll('.snowflake-rating').forEach(s => s.classList.remove('hovered'));
                 });
                 
                 document.getElementById('ratingModal').classList.remove('hidden');
@@ -323,10 +314,7 @@
                 const reportId = document.getElementById('ratingReportId').value;
                 const rating = parseInt(document.getElementById('ratingValue').value);
                 
-                if (rating === 0) {
-                    alert('Выберите оценку!');
-                    return;
-                }
+                if (rating === 0) { alert('Выберите оценку!'); return; }
 
                 const { data: existing } = await supabase
                     .from('report_ratings')
@@ -335,22 +323,10 @@
                     .eq('user_id', currentUser.id)
                     .single();
 
-                if (existing) {
-                    alert('Вы уже оценили этот отчёт!');
-                    closeRatingModal();
-                    return;
-                }
+                if (existing) { alert('Вы уже оценили этот отчёт!'); closeRatingModal(); return; }
 
-                await supabase.from('report_ratings').insert({
-                    report_id: reportId,
-                    user_id: currentUser.id,
-                    rating: rating
-                });
-
-                await supabase.from('view_history')
-                    .update({ rated: true })
-                    .eq('user_id', currentUser.id)
-                    .eq('report_id', reportId);
+                await supabase.from('report_ratings').insert({ report_id: reportId, user_id: currentUser.id, rating: rating });
+                await supabase.from('view_history').update({ rated: true }).eq('user_id', currentUser.id).eq('report_id', reportId);
 
                 closeRatingModal();
                 loadHistory();
