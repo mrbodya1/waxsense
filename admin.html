@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | WaxCrowd</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-btn { padding: 10px 20px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: #dc2626; border-bottom-color: #dc2626; }
+        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 20px; }
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-red-600">🛠️ WaxCrowd Admin</a>
+            <div class="flex gap-4">
+                <a href="index.html" class="text-gray-600">Главная</a>
+                <button onclick="logout()" class="text-red-600">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        
+        <!-- Проверка доступа -->
+        <div id="accessDenied" class="bg-red-50 border border-red-200 rounded-xl p-8 text-center hidden">
+            <h2 class="text-2xl font-bold text-red-700 mb-2">⛔ Доступ запрещён</h2>
+            <p class="text-red-600">У вас нет прав администратора</p>
+        </div>
+
+        <div id="adminContent" class="hidden">
+            <!-- Вкладки -->
+            <div class="flex border-b mb-6">
+                <button id="tabSkiBrands" class="tab-btn active">🎿 Бренды лыж</button>
+                <button id="tabSkiModels" class="tab-btn">📋 Модели лыж</button>
+                <button id="tabWaxBrands" class="tab-btn">🧴 Бренды смазок</button>
+                <button id="tabWaxProducts" class="tab-btn">🔬 Смазки</button>
+            </div>
+
+            <!-- Счётчики -->
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <div class="text-sm text-gray-500">Бренды лыж</div>
+                    <div class="text-2xl font-bold" id="countSkiBrands">0</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <div class="text-sm text-gray-500">Модели лыж</div>
+                    <div class="text-2xl font-bold" id="countSkiModels">0</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <div class="text-sm text-gray-500">Бренды смазок</div>
+                    <div class="text-2xl font-bold" id="countWaxBrands">0</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-sm">
+                    <div class="text-sm text-gray-500">Смазки</div>
+                    <div class="text-2xl font-bold" id="countWaxProducts">0</div>
+                </div>
+            </div>
+
+            <!-- Таблица -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr id="tableHeader">
+                                <!-- Заполняется динамически -->
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Заполняется динамически -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="emptyMessage" class="text-center py-12 text-gray-500 hidden">
+                    Нет записей для модерации
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            let currentUser = null;
+            let isAdmin = false;
+            let currentTab = 'skiBrands';
+
+            // Проверка админа
+            async function checkAdmin() {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) { window.location.href = 'auth.html'; return false; }
+                currentUser = user;
+
+                const { data: admin } = await supabase
+                    .from('admin_users')
+                    .select('user_id')
+                    .eq('user_id', user.id)
+                    .single();
+
+                isAdmin = !!admin;
+                
+                if (isAdmin) {
+                    document.getElementById('adminContent').classList.remove('hidden');
+                    document.getElementById('accessDenied').classList.add('hidden');
+                    loadCounts();
+                    loadTable();
+                } else {
+                    document.getElementById('adminContent').classList.add('hidden');
+                    document.getElementById('accessDenied').classList.remove('hidden');
+                }
+                
+                return isAdmin;
+            }
+
+            // Загрузка счётчиков
+            async function loadCounts() {
+                const tables = ['user_ski_brands', 'user_ski_models', 'user_wax_brands', 'user_wax_products'];
+                for (const table of tables) {
+                    const { count } = await supabase
+                        .from(table)
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'pending');
+                    
+                    const element = document.getElementById('count' + table.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('').replace('User', ''));
+                    if (element) element.textContent = count || 0;
+                }
+            }
+
+            // Загрузка таблицы
+            async function loadTable() {
+                const tableName = {
+                    skiBrands: 'user_ski_brands',
+                    skiModels: 'user_ski_models',
+                    waxBrands: 'user_wax_brands',
+                    waxProducts: 'user_wax_products'
+                }[currentTab];
+
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                const tbody = document.getElementById('tableBody');
+                const thead = document.getElementById('tableHeader');
+                const emptyMsg = document.getElementById('emptyMessage');
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyMsg.classList.remove('hidden');
+                    return;
+                }
+
+                emptyMsg.classList.add('hidden');
+
+                // Заголовки
+                const headers = {
+                    user_ski_brands: ['Пользователь', 'Бренд', 'Дата', 'Действия'],
+                    user_ski_models: ['Пользователь', 'Бренд', 'Модель', 'Дата', 'Действия'],
+                    user_wax_brands: ['Пользователь', 'Бренд', 'Дата', 'Действия'],
+                    user_wax_products: ['Пользователь', 'Бренд', 'Смазка', 'Дата', 'Действия']
+                }[tableName];
+
+                thead.innerHTML = headers.map(h => `<th class="px-4 py-3 text-left text-sm font-medium text-gray-600">${h}</th>`).join('');
+
+                // Данные
+                tbody.innerHTML = '';
+                for (const item of data) {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-gray-50';
+                    
+                    const date = new Date(item.created_at).toLocaleDateString('ru-RU');
+                    
+                    if (tableName === 'user_ski_brands') {
+                        row.innerHTML = `
+                            <td class="px-4 py-3 text-sm">${item.user_id?.slice(0, 8) || '—'}...</td>
+                            <td class="px-4 py-3 font-medium">${item.name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${date}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="approve('${tableName}', '${item.id}')" class="text-green-600 hover:text-green-800 mr-3">✅</button>
+                                <button onclick="reject('${tableName}', '${item.id}')" class="text-red-600 hover:text-red-800">❌</button>
+                            </td>
+                        `;
+                    } else if (tableName === 'user_ski_models') {
+                        row.innerHTML = `
+                            <td class="px-4 py-3 text-sm">${item.user_id?.slice(0, 8) || '—'}...</td>
+                            <td class="px-4 py-3">${item.brand_name}</td>
+                            <td class="px-4 py-3 font-medium">${item.model_name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${date}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="approve('${tableName}', '${item.id}')" class="text-green-600 hover:text-green-800 mr-3">✅</button>
+                                <button onclick="reject('${tableName}', '${item.id}')" class="text-red-600 hover:text-red-800">❌</button>
+                            </td>
+                        `;
+                    } else if (tableName === 'user_wax_brands') {
+                        row.innerHTML = `
+                            <td class="px-4 py-3 text-sm">${item.user_id?.slice(0, 8) || '—'}...</td>
+                            <td class="px-4 py-3 font-medium">${item.name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${date}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="approve('${tableName}', '${item.id}')" class="text-green-600 hover:text-green-800 mr-3">✅</button>
+                                <button onclick="reject('${tableName}', '${item.id}')" class="text-red-600 hover:text-red-800">❌</button>
+                            </td>
+                        `;
+                    } else if (tableName === 'user_wax_products') {
+                        row.innerHTML = `
+                            <td class="px-4 py-3 text-sm">${item.user_id?.slice(0, 8) || '—'}...</td>
+                            <td class="px-4 py-3">${item.brand_name}</td>
+                            <td class="px-4 py-3 font-medium">${item.product_name}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500">${date}</td>
+                            <td class="px-4 py-3">
+                                <button onclick="approve('${tableName}', '${item.id}')" class="text-green-600 hover:text-green-800 mr-3">✅</button>
+                                <button onclick="reject('${tableName}', '${item.id}')" class="text-red-600 hover:text-red-800">❌</button>
+                            </td>
+                        `;
+                    }
+                    
+                    tbody.appendChild(row);
+                }
+            }
+
+            // Одобрить
+            window.approve = async function(table, id) {
+                const { error } = await supabase
+                    .from(table)
+                    .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: currentUser.id })
+                    .eq('id', id);
+
+                if (error) {
+                    alert('Ошибка: ' + error.message);
+                } else {
+                    loadCounts();
+                    loadTable();
+                }
+            };
+
+            // Отклонить
+            window.reject = async function(table, id) {
+                const { error } = await supabase
+                    .from(table)
+                    .update({ status: 'rejected' })
+                    .eq('id', id);
+
+                if (error) {
+                    alert('Ошибка: ' + error.message);
+                } else {
+                    loadCounts();
+                    loadTable();
+                }
+            };
+
+            // Вкладки
+            document.getElementById('tabSkiBrands').addEventListener('click', () => switchTab('skiBrands'));
+            document.getElementById('tabSkiModels').addEventListener('click', () => switchTab('skiModels'));
+            document.getElementById('tabWaxBrands').addEventListener('click', () => switchTab('waxBrands'));
+            document.getElementById('tabWaxProducts').addEventListener('click', () => switchTab('waxProducts'));
+
+            function switchTab(tab) {
+                currentTab = tab;
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+                loadTable();
+            }
+
+            window.logout = async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            };
+
+            // Запуск
+            checkAdmin();
+        })();
+    </script>
+</body>
+</html>
