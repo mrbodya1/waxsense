@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waxsense | Wax smarter, ski faster</title>
+    <title>WaxSense | Краудсорс смазок</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
@@ -19,14 +19,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('✅ Service Worker зарегистрирован', reg.scope))
-          .catch(err => console.log('❌ Service Worker ошибка', err));
-      }
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -38,10 +30,7 @@
         .hero-gradient::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><circle cx="100" cy="100" r="150" fill="rgba(255,255,255,0.03)"/><circle cx="900" cy="200" r="200" fill="rgba(255,255,255,0.04)"/><circle cx="500" cy="500" r="250" fill="rgba(255,255,255,0.02)"/><circle cx="1100" cy="600" r="120" fill="rgba(255,255,255,0.05)"/></svg>');
             background-size: cover;
             opacity: 0.5;
@@ -74,152 +63,158 @@
 <body class="bg-gray-50 min-h-screen">
     
     <nav class="bg-white/90 backdrop-blur-md border-b sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-            <a href="index.html" class="text-xl font-bold text-blue-600">WaxSense</a>
-            <div id="authSection" class="flex items-center gap-4"></div>
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-xl sm:text-2xl font-bold text-teal-600">WaxSense</a>
+            <div id="authSection" class="flex items-center gap-2 sm:gap-4"></div>
         </div>
     </nav>
 
-    <section class="hero-gradient text-white py-20 px-4 relative">
+    <section class="hero-gradient text-white py-10 sm:py-20 px-4 relative">
         <div class="max-w-5xl mx-auto text-center relative z-10">
-            <div class="inline-block mb-4 px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm border border-white/20">
+            <div class="inline-block mb-4 px-3 py-1 sm:px-4 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-xs sm:text-sm border border-white/20">
                 ⚡ Краудсорс-платформа для лыжников
             </div>
-            <h1 class="text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                Правильная смазка <br>
+            <h1 class="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                Правильная смазка —<br>
                 <span class="bg-gradient-to-r from-blue-300 to-cyan-200 bg-clip-text text-transparent">
                     за 10 секунд
                 </span>
             </h1>
-            <p class="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
+            <p class="text-base sm:text-xl text-blue-100 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
                 Реальные отчёты лыжников о смазках и условиях катания. 
                 Никаких теоретических таблиц — только живой опыт сообщества 
                 для ваших конкретных условий.
             </p>
             
-            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <a href="find.html" id="heroFindBtn" class="btn-primary text-white px-8 py-4 rounded-xl text-lg font-semibold inline-flex items-center justify-center gap-2">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12">
+                <a href="find.html" id="heroFindBtn" class="btn-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold inline-flex items-center justify-center gap-2">
                     🔍 Подобрать смазку
                 </a>
-                <a href="report.html" class="btn-secondary text-white px-8 py-4 rounded-xl text-lg font-medium inline-flex items-center justify-center gap-2">
+                <a href="report.html" class="btn-secondary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-medium inline-flex items-center justify-center gap-2">
                     📝 Добавить отчёт
                 </a>
             </div>
 
-            <div class="flex justify-center gap-4">
-                <div class="stat-card rounded-2xl px-4 py-3 text-center w-24">...</div>
-                <div class="stat-card rounded-2xl px-4 py-3 text-center w-24">...</div>
-                <div class="stat-card rounded-2xl px-4 py-3 text-center w-24">...</div>
-            </div>
-            </div>
-                <div class="stat-card rounded-2xl px-6 py-3">
-                    <div class="text-3xl font-bold" id="heroLocationsCount">0</div>
-                    <div class="text-sm text-blue-200">трасс</div>
+            <div class="flex justify-center gap-2 sm:gap-4">
+                <div class="stat-card rounded-2xl px-3 py-2 sm:px-6 sm:py-3 text-center min-w-[80px] sm:min-w-[100px]">
+                    <div class="text-2xl sm:text-3xl font-bold" id="heroReportsCount">0</div>
+                    <div class="text-xs sm:text-sm text-blue-200">отчётов</div>
                 </div>
-                <div class="stat-card rounded-2xl px-6 py-3">
-                    <div class="text-3xl font-bold" id="heroUsersCount">0</div>
-                    <div class="text-sm text-blue-200">лыжников</div>
+                <div class="stat-card rounded-2xl px-3 py-2 sm:px-6 sm:py-3 text-center min-w-[80px] sm:min-w-[100px]">
+                    <div class="text-2xl sm:text-3xl font-bold" id="heroLocationsCount">0</div>
+                    <div class="text-xs sm:text-sm text-blue-200">трасс</div>
+                </div>
+                <div class="stat-card rounded-2xl px-3 py-2 sm:px-6 sm:py-3 text-center min-w-[80px] sm:min-w-[100px]">
+                    <div class="text-2xl sm:text-3xl font-bold" id="heroUsersCount">0</div>
+                    <div class="text-xs sm:text-sm text-blue-200">лыжников</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-16 px-4 bg-white">
+    <section class="py-10 sm:py-16 px-4 bg-white">
         <div class="max-w-6xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Как это работает</h2>
-            <div class="grid md:grid-cols-3 gap-8">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-gray-800">Как это работает</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
                 <div class="text-center">
-                    <div class="w-20 h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span class="text-4xl">📝</span>
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <span class="text-3xl sm:text-4xl">📝</span>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">1. Оставьте отчёт</h3>
-                    <p class="text-gray-600">Укажите погоду, лыжи и смазку — это займёт меньше минуты</p>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-2">1. Оставьте отчёт</h3>
+                    <p class="text-gray-600 text-sm sm:text-base">Укажите погоду, лыжи и смазку — это займёт меньше минуты</p>
                 </div>
                 <div class="text-center">
-                    <div class="w-20 h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span class="text-4xl">🔍</span>
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <span class="text-3xl sm:text-4xl">🔍</span>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">2. Подберите смазку</h3>
-                    <p class="text-gray-600">Укажите условия — система найдёт лучшие отчёты</p>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-2">2. Подберите смазку</h3>
+                    <p class="text-gray-600 text-sm sm:text-base">Укажите условия — система найдёт лучшие отчёты</p>
                 </div>
                 <div class="text-center">
-                    <div class="w-20 h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <span class="text-4xl">⭐</span>
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                        <span class="text-3xl sm:text-4xl">⭐</span>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">3. Оцените результат</h3>
-                    <p class="text-gray-600">После покатушки вернитесь и оцените отчёт — это поможет другим</p>
+                    <h3 class="text-lg sm:text-xl font-semibold mb-2">3. Оцените результат</h3>
+                    <p class="text-gray-600 text-sm sm:text-base">После покатушки вернитесь и оцените отчёт — это поможет другим</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-16 px-4 bg-gray-50">
+    <section class="py-10 sm:py-16 px-4 bg-gray-50">
         <div class="max-w-5xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Почему это работает</h2>
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="flex gap-4">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-gray-800">Почему это работает</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+                <div class="flex gap-3 sm:gap-4">
                     <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">🎿</div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center text-xl sm:text-2xl">🎿</div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold mb-1">Учитываем тип лыж</h3>
-                        <p class="text-gray-600">Одна и та же смазка по-разному работает на разных лыжах. Мы это учитываем.</p>
+                        <h3 class="text-base sm:text-lg font-semibold mb-1">Учитываем тип лыж</h3>
+                        <p class="text-gray-600 text-sm sm:text-base">Одна и та же смазка по-разному работает на разных лыжах. Мы это учитываем.</p>
                     </div>
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-3 sm:gap-4">
                     <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">📍</div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl flex items-center justify-center text-xl sm:text-2xl">📍</div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold mb-1">Локальные данные</h3>
-                        <p class="text-gray-600">Отчёты с конкретных трасс. Снег в Москве и Мурманске — разные вселенные.</p>
+                        <h3 class="text-base sm:text-lg font-semibold mb-1">Локальные данные</h3>
+                        <p class="text-gray-600 text-sm sm:text-base">Отчёты с конкретных трасс. Снег в Москве и Мурманске — разные вселенные.</p>
                     </div>
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-3 sm:gap-4">
                     <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-2xl">⏱️</div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl flex items-center justify-center text-xl sm:text-2xl">⏱️</div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold mb-1">Реальное время</h3>
-                        <p class="text-gray-600">Данные обновляются каждый день. То, что работало вчера — работает сегодня.</p>
+                        <h3 class="text-base sm:text-lg font-semibold mb-1">Реальное время</h3>
+                        <p class="text-gray-600 text-sm sm:text-base">Данные обновляются каждый день. То, что работало вчера — работает сегодня.</p>
                     </div>
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-3 sm:gap-4">
                     <div class="flex-shrink-0">
-                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">❄️</div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-xl flex items-center justify-center text-xl sm:text-2xl">❄️</div>
                     </div>
                     <div>
-                        <h3 class="text-lg font-semibold mb-1">Проверено лыжниками</h3>
-                        <p class="text-gray-600">Каждый отчёт можно оценить. Чем больше ❄️ — тем больше доверия.</p>
+                        <h3 class="text-base sm:text-lg font-semibold mb-1">Проверено лыжниками</h3>
+                        <p class="text-gray-600 text-sm sm:text-base">Каждый отчёт можно оценить. Чем больше ❄️ — тем больше доверия.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="py-16 px-4 hero-gradient text-white relative">
+    <section class="py-10 sm:py-16 px-4 hero-gradient text-white relative">
         <div class="max-w-3xl mx-auto text-center relative z-10">
-            <h2 class="text-3xl font-bold mb-4">Готовы поделиться опытом?</h2>
-            <p class="text-xl text-blue-100 mb-8">Присоединяйтесь к сообществу лыжников и помогайте другим выбирать правильную смазку</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="report.html" class="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-50 transition">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-4">Готовы поделиться опытом?</h2>
+            <p class="text-base sm:text-xl text-blue-100 mb-6 sm:mb-8">Присоединяйтесь к сообществу лыжников и помогайте другим выбирать правильную смазку</p>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <a href="report.html" class="bg-white text-blue-700 px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-50 transition">
                     📝 Добавить отчёт
                 </a>
-                <a href="auth.html" class="btn-secondary text-white px-8 py-4 rounded-xl text-lg font-medium">
+                <a href="auth.html" class="btn-secondary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-medium">
                     👤 Создать аккаунт
                 </a>
             </div>
         </div>
     </section>
 
-    <footer class="bg-gray-900 text-gray-400 py-8 px-4">
+    <footer class="bg-gray-900 text-gray-400 py-6 sm:py-8 px-4">
         <div class="max-w-6xl mx-auto text-center">
-            <p class="mb-2"> Waxsense — краудсорс-платформа для лыжников</p>
-            <p class="text-sm">© 2026 · Данные обновляются в реальном времени</p>
+            <p class="mb-2">❄️ WaxSense — краудсорс-платформа для лыжников</p>
+            <p class="text-xs sm:text-sm">© 2026 · Данные обновляются в реальном времени</p>
         </div>
     </footer>
 
     <script>
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('✅ SW registered', reg.scope))
+                .catch(err => console.log('❌ SW error', err));
+        }
+
         (function() {
             const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
@@ -228,25 +223,17 @@
             async function updateAuthUI() {
                 const { data: { user } } = await supabase.auth.getUser();
                 const el = document.getElementById('authSection');
-                
-                // Кнопка "Подобрать" в hero
-                const findBtn = document.querySelector('a[href="find.html"]');
-                
                 if (user) {
                     el.innerHTML = `
-                        <a href="profile.html" class="text-gray-700 hover:text-teal-600 font-medium">👤 Профиль</a>
-                        <a href="report.html" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700">+ Отчёт</a>
+                        <a href="profile.html" class="text-gray-700 hover:text-teal-600 font-medium text-sm sm:text-base">👤 Профиль</a>
+                        <a href="report.html" class="bg-teal-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-teal-700">+ Отчёт</a>
                         <button onclick="logout()" class="text-gray-500 text-sm hover:text-gray-700">Выйти</button>
                     `;
-                    // Оставляем ссылку на find.html для авторизованных
-                    if (findBtn) findBtn.href = 'find.html';
                 } else {
                     el.innerHTML = `
-                        <a href="auth.html" class="text-gray-700 hover:text-teal-600 font-medium">Вход</a>
-                        <a href="auth.html" class="bg-teal-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-teal-700">Регистрация</a>
+                        <a href="auth.html" class="text-gray-700 hover:text-teal-600 font-medium text-sm sm:text-base">Вход</a>
+                        <a href="auth.html" class="bg-teal-600 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-sm font-medium hover:bg-teal-700">Регистрация</a>
                     `;
-                    // Для гостей кнопка "Подобрать" ведёт на auth.html
-                    if (findBtn) findBtn.href = 'auth.html';
                 }
             }
 
