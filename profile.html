@@ -58,7 +58,10 @@
                         <p class="text-xs sm:text-sm text-gray-500">Рейтинг: <span id="userRating">—</span> ❄️</p>
                     </div>
                 </div>
-                <button onclick="toggleEdit()" class="border px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-sm sm:text-base">✏️</button>
+                <div class="flex gap-2">
+                    <button onclick="exportToCSV()" class="border px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-sm sm:text-base bg-green-50 text-green-700 border-green-200 hover:bg-green-100" title="Скачать мои отчёты">📥</button>
+                    <button onclick="toggleEdit()" class="border px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-sm sm:text-base">✏️</button>
+                </div>
             </div>
         </div>
 
@@ -183,13 +186,13 @@
                     .select('id, report_type, start_date, country, city, location_name, temp_from, temp_to, weather, track_condition, comment, votes_sum, votes_count, rating')
                     .eq('user_id', currentUser.id)
                     .order('created_at', { ascending: false });
-
+            
                 const container = document.getElementById('userReports');
                 if (!reports?.length) {
                     container.innerHTML = '<div class="text-gray-500 text-center py-6 sm:py-8 text-sm sm:text-base">Нет отчётов</div>';
                     return;
                 }
-
+            
                 container.innerHTML = reports.map(r => {
                     const avg = r.votes_count > 0 ? (r.votes_sum / r.votes_count).toFixed(1) : '—';
                     const weatherIcon = weatherIcons[r.weather] || '';
@@ -213,6 +216,74 @@
                     `;
                 }).join('');
             }
+            
+            // Экспорт отчётов в CSV (Excel)
+            window.exportToCSV = async function() {
+                const { data: reports } = await supabase
+                    .from('reports')
+                    .select('start_date, country, city, location_name, temp_from, temp_to, weather, track_condition, snow_type, rating, comment, report_type, ski_brand, ski_model, ski_base, ski_structure')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+            
+                if (!reports || reports.length === 0) {
+                    alert('У вас пока нет отчётов для экспорта');
+                    return;
+                }
+            
+                // Заголовки CSV
+                const headers = [
+                    'Дата', 'Страна', 'Город', 'Место', 
+                    'Темп. от (°C)', 'Темп. до (°C)', 'Погода', 
+                    'Трасса', 'Тип снега', 'Тип смазки', 
+                    'Бренд лыж', 'Модель лыж', 'База', 'Структура',
+                    'Оценка (1-10)', 'Комментарий'
+                ];
+            
+                // Функция для безопасного CSV-значения
+                const escapeCSV = (val) => {
+                    if (val === null || val === undefined) return '';
+                    const str = String(val);
+                    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                        return '"' + str.replace(/"/g, '""') + '"';
+                    }
+                    return str;
+                };
+            
+                // Погода и тип смазки в читаемом виде
+                const weatherNamesExport = { 'sunny': 'Солнечно', 'cloudy': 'Облачно', 'overcast': 'Пасмурно', 'light_snow': 'Слабый снег', 'heavy_snow': 'Сильный снег', 'rain': 'Дождь', 'sleet': 'Снег с дождём' };
+                const typeNames = { 'glide': 'Скольжение', 'grip': 'Держание' };
+            
+                // Формируем строки CSV
+                const rows = reports.map(r => [
+                    r.start_date ? new Date(r.start_date).toLocaleDateString('ru-RU') : '',
+                    escapeCSV(r.country || ''),
+                    escapeCSV(r.city || ''),
+                    escapeCSV(r.location_name || ''),
+                    r.temp_from ?? '',
+                    r.temp_to ?? '',
+                    weatherNamesExport[r.weather] || r.weather || '',
+                    escapeCSV(r.track_condition || ''),
+                    escapeCSV(r.snow_type || ''),
+                    typeNames[r.report_type] || r.report_type || '',
+                    escapeCSV(r.ski_brand || ''),
+                    escapeCSV(r.ski_model || ''),
+                    escapeCSV(r.ski_base || ''),
+                    escapeCSV(r.ski_structure || ''),
+                    r.rating ?? '',
+                    escapeCSV(r.comment || '')
+                ]);
+            
+                // Собираем CSV
+                const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+                
+                // Скачиваем файл
+                const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `waxsense_my_reports_${new Date().toISOString().slice(0,10)}.csv`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            };
 
             async function loadHistory() {
                 const { data: history } = await supabase
