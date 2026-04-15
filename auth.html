@@ -82,14 +82,26 @@
             
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const { error } = await supabase.auth.signInWithPassword({
-                    email: document.getElementById('loginEmail').value,
-                    password: document.getElementById('loginPassword').value
-                });
-                if (error) {
-                    document.getElementById('message').innerHTML = `<span class="text-red-600">❌ ${error.message}</span>`;
-                } else {
-                    window.location.href = 'index.html';
+                console.log('🔘 Кнопка Войти нажата');
+                
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                console.log('📧 Email:', email);
+                
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    console.log('✅ Ответ:', data, error);
+                    
+                    if (error) {
+                        document.getElementById('message').innerHTML = `<span class="text-red-600">❌ ${error.message}</span>`;
+                    } else {
+                        document.getElementById('message').innerHTML = '<span class="text-green-600">✅ Успешный вход!</span>';
+                        setTimeout(() => { window.location.href = 'index.html'; }, 500);
+                    }
+                } catch (err) {
+                    console.error('🔥 Ошибка:', err);
+                    document.getElementById('message').innerHTML = '<span class="text-red-600">❌ Ошибка соединения</span>';
                 }
             });
             
