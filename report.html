@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новый отчёт | Waxsense</title>
+    <title>Новый отчёт | WaxSense</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
@@ -11,7 +11,7 @@
     
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0d9488">
+    <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WaxSense">
@@ -19,51 +19,65 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('✅ Service Worker зарегистрирован', reg.scope))
-          .catch(err => console.log('❌ Service Worker ошибка', err));
-      }
-    </script>
     <style>
-        .tab-btn { padding: 12px 24px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab-btn { padding: 10px 16px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
-        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 13px; color: #6b7280; }
+        .slider-label { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: #6b7280; flex-wrap: wrap; }
+        .slider-label span { white-space: nowrap; }
         .suggestion-item { transition: background-color 0.15s; }
         .suggestion-item:hover { background-color: #f0fdfa !important; }
         .suggestion-item.bg-teal-100 { background-color: #ccfbf1; }
+        .weather-btn {
+            padding: 6px 2px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+        .weather-btn.active { border-color: #2563eb; background: #eff6ff; }
+        .weather-btn span { font-size: 18px; display: block; margin-bottom: 2px; }
+        @media (min-width: 640px) {
+            .tab-btn { padding: 12px 24px; }
+            .slider-label { font-size: 12px; }
+            .weather-btn { padding: 8px 4px; font-size: 14px; border-radius: 12px; }
+            .weather-btn span { font-size: 24px; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <nav class="bg-white border-b">
-        <div class="max-w-4xl mx-auto px-4 py-3">
-            <a href="index.html" class="text-2xl font-bold text-blue-600">❄️ Waxsense</a>
+        <div class="max-w-4xl mx-auto px-3 sm:px-4 py-3 flex justify-between items-center">
+            <a href="index.html" class="text-xl sm:text-2xl font-bold text-blue-600">WaxSense</a>
+            <div class="flex gap-2 sm:gap-4">
+                <a href="index.html" class="text-gray-600 text-sm sm:text-base">Главная</a>
+                <a href="profile.html" class="text-gray-600 text-sm sm:text-base">Профиль</a>
+                <button onclick="logout()" class="text-red-600 text-sm sm:text-base">Выйти</button>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-2xl mx-auto px-4 py-6">
-        <div class="bg-white rounded-2xl shadow-lg p-6">
+    <main class="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6">
             
-            <div class="flex border-b mb-6">
-                <button id="tabGlide" class="tab-btn active flex-1">⛷️ Скольжение</button>
-                <button id="tabGrip" class="tab-btn flex-1">🎯 Держание</button>
+            <div class="flex border-b mb-4 sm:mb-6">
+                <button id="tabGlide" class="tab-btn active flex-1 text-sm sm:text-base">⛷️ Скольжение</button>
+                <button id="tabGrip" class="tab-btn flex-1 text-sm sm:text-base">🎯 Держание</button>
             </div>
 
             <form id="reportForm">
                 <input type="hidden" id="reportType" value="glide">
 
-                <!-- 1. ОБЩЕЕ -->
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-3 sm:space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div>
                             <label class="block text-sm font-medium mb-1">Дата старта</label>
-                            <input type="date" id="startDate" required class="w-full border rounded-xl p-3">
+                            <input type="date" id="startDate" required class="w-full border rounded-xl p-2 sm:p-3">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Страна</label>
-                            <select id="country" class="w-full border rounded-xl p-3">
+                            <select id="country" class="w-full border rounded-xl p-2 sm:p-3">
                                 <option value="Россия" selected>🇷🇺 Россия</option>
                                 <option value="Финляндия">🇫🇮 Финляндия</option>
                                 <option value="Швеция">🇸🇪 Швеция</option>
@@ -75,26 +89,25 @@
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div class="relative">
                             <label class="block text-sm font-medium mb-1">Город</label>
-                            <input type="text" id="cityInput" placeholder="Начните вводить..." class="w-full border rounded-xl p-3" autocomplete="off">
+                            <input type="text" id="cityInput" placeholder="Начните вводить..." class="w-full border rounded-xl p-2 sm:p-3" autocomplete="off">
                             <input type="hidden" id="cityId">
                             <input type="hidden" id="cityRegion">
                             <div id="citySuggestions" class="absolute z-50 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Место старта</label>
-                            <input type="text" id="locationName" placeholder="Лужники" required class="w-full border rounded-xl p-3">
+                            <input type="text" id="locationName" placeholder="Лужники" required class="w-full border rounded-xl p-2 sm:p-3">
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. ПОГОДА -->
-                <div class="border rounded-lg p-4 bg-gray-50 mt-4">
-                    <h2 class="font-semibold mb-3">🌡️ Погодные условия</h2>
+                <div class="border rounded-lg p-3 sm:p-4 bg-gray-50 mt-4">
+                    <h2 class="font-semibold mb-3 text-base sm:text-lg">🌡️ Погодные условия</h2>
                     
-                    <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3">
                         <div>
                             <label class="block text-sm font-medium mb-1">Температура от: <span id="tempFromValue">-5</span>°C</label>
                             <input type="range" id="tempFrom" min="-30" max="15" value="-5" step="1" class="w-full">
@@ -107,8 +120,7 @@
                         </div>
                     </div>
                     
-                    <!-- Погода (слайдер) -->
-                    <div>
+                    <div class="mb-3">
                         <label class="block text-sm font-medium mb-1">Погода: <span id="weatherValue">☀️ Солнечно</span></label>
                         <input type="range" id="weatherSlider" min="1" max="7" value="1" step="1" class="w-full">
                         <div class="slider-label">
@@ -116,26 +128,25 @@
                         </div>
                         <input type="hidden" id="weather" value="sunny">
                     </div>
-                </div>
-
-                <!-- Спойлер "Дополнительно" -->
-                <div class="mt-4">
-                    <button type="button" id="toggleDetails" class="text-blue-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
-                </div>
-
-                <div id="detailsSection" class="hidden space-y-4 mt-4 pt-4 border-t">
-                    <div class="grid grid-cols-3 gap-3">
-                        <div><label class="block text-sm mb-1">Темп. снега</label><input type="number" id="snowTemp" class="w-full border rounded-xl p-2"></div>
-                        <div><label class="block text-sm mb-1">Влажность %</label><input type="number" id="humidity" min="0" max="100" class="w-full border rounded-xl p-2"></div>
-                        <div><label class="block text-sm mb-1">Давление</label><input type="number" id="pressure" class="w-full border rounded-xl p-2"></div>
-                    </div>
-
+                    
                     <div>
                         <label class="block text-sm font-medium mb-1">Состояние <span id="trackLabel">трассы</span>: <span id="trackValue">Жесткая</span></label>
                         <input type="range" id="trackCondition" min="1" max="7" value="3" step="1" class="w-full">
                         <div class="slider-label">
                             <span>Лёд</span><span>Оч.жест</span><span>Жесткая</span><span>Отличная</span><span>Разбитая</span><span>Мягкая</span><span>Оч.мяг</span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="mt-3 sm:mt-4">
+                    <button type="button" id="toggleDetails" class="text-blue-600 text-sm font-medium">▶ ⚙️ Дополнительно</button>
+                </div>
+
+                <div id="detailsSection" class="hidden space-y-3 sm:space-y-4 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                        <div><label class="block text-sm mb-1">Темп. снега</label><input type="number" id="snowTemp" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Влажность %</label><input type="number" id="humidity" min="0" max="100" class="w-full border rounded-xl p-2"></div>
+                        <div><label class="block text-sm mb-1">Давление</label><input type="number" id="pressure" class="w-full border rounded-xl p-2"></div>
                     </div>
 
                     <div>
@@ -146,7 +157,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div class="relative">
                             <label class="block text-sm mb-1">Бренд лыж</label>
                             <input type="text" id="skiBrandInput" placeholder="Выберите или введите свой" class="w-full border rounded-xl p-2" autocomplete="off">
@@ -163,21 +174,19 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                         <div><label class="block text-sm mb-1">База (эпюра)</label><input type="text" id="skiBase" placeholder="28 / A5" class="w-full border rounded-xl p-2"></div>
                         <div><label class="block text-sm mb-1">Структура</label><input type="text" id="skiStructure" placeholder="P5-1" class="w-full border rounded-xl p-2"></div>
                     </div>
                 </div>
 
-                <!-- Слои смазки -->
-                <div class="mt-6 pt-4 border-t">
-                    <h3 class="font-medium mb-3" id="waxSectionTitle">🧴 Смазка (скольжение)</h3>
+                <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
+                    <h3 class="font-medium mb-3 text-base sm:text-lg" id="waxSectionTitle">🧴 Смазка (скольжение)</h3>
                     <div id="waxLayers"></div>
                     <button type="button" id="addLayer" class="mt-3 text-blue-600 text-sm">+ Добавить слой</button>
                 </div>
 
-                <!-- Оценка 1-10 -->
-                <div class="mt-6 pt-4 border-t">
+                <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
                     <label class="block text-sm font-medium mb-1">⭐ Оценка работы смазки: <span id="ratingValue">5</span>/10</label>
                     <input type="range" id="rating" min="1" max="10" value="5" step="1" class="w-full">
                     <div class="slider-label">
@@ -185,16 +194,14 @@
                     </div>
                 </div>
 
-                <!-- Комментарий -->
-                <div class="mt-6 pt-4 border-t">
+                <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
                     <label class="block text-sm font-medium mb-1">💬 Комментарий</label>
-                    <textarea id="comment" rows="3" class="w-full border rounded-xl p-3" placeholder="Нюансы нанесения, ощущения..."></textarea>
+                    <textarea id="comment" rows="3" class="w-full border rounded-xl p-2 sm:p-3" placeholder="Нюансы нанесения, ощущения..."></textarea>
                 </div>
 
-                <!-- Кнопки -->
-                <div class="flex gap-3 mt-6">
-                    <button type="submit" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-medium hover:bg-blue-700">💾 Сохранить отчёт</button>
-                    <button type="button" onclick="window.location.href='index.html'" class="px-6 py-3 border rounded-xl hover:bg-gray-50">Отмена</button>
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 sm:py-3 rounded-xl font-medium hover:bg-blue-700">💾 Сохранить отчёт</button>
+                    <button type="button" onclick="window.location.href='index.html'" class="px-6 py-2.5 sm:py-3 border rounded-xl hover:bg-gray-50">Отмена</button>
                 </div>
                 <div id="message" class="text-center text-sm mt-3"></div>
             </form>
@@ -202,6 +209,13 @@
     </main>
 
     <script>
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('✅ SW registered'))
+                .catch(err => console.log('❌ SW error', err));
+        }
+
         (function() {
             const SUPABASE_URL = 'https://anysqgzlkwjzbkphmsdb.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_nms9x0qfeR7JmtMls6vU6Q_HzRIKaWk';
@@ -212,6 +226,8 @@
                 if (!user) { window.location.href = 'auth.html'; return false; }
                 return true;
             }
+
+            window.logout = async () => { await supabase.auth.signOut(); window.location.href = 'index.html'; };
 
             let layerCount = 1;
             const trackConditions = ['Лёд', 'Очень жесткая', 'Жесткая', 'Отличная', 'Разбитая', 'Мягкая', 'Очень мягкая'];
@@ -247,7 +263,6 @@
                 waxTitle.textContent = '🎯 Смазка (держание)'; updateLayerLabels();
             });
 
-            // Слайдеры температуры
             const tempFrom = document.getElementById('tempFrom');
             const tempTo = document.getElementById('tempTo');
             const tempFromValue = document.getElementById('tempFromValue');
@@ -269,37 +284,29 @@
                 }
             });
 
-            // Слайдер погоды
             const weatherSlider = document.getElementById('weatherSlider');
             const weatherValue = document.getElementById('weatherValue');
             const weatherInput = document.getElementById('weather');
-
             weatherSlider.addEventListener('input', () => {
                 const idx = weatherSlider.value - 1;
                 weatherValue.textContent = weatherOptions[idx].label;
                 weatherInput.value = weatherOptions[idx].value;
             });
 
-            // Слайдер трассы
             const trackSlider = document.getElementById('trackCondition');
             trackSlider.addEventListener('input', () => {
                 document.getElementById('trackValue').textContent = trackConditions[trackSlider.value - 1];
             });
 
-            // Слайдер снега
             const snowSlider = document.getElementById('snowType');
             snowSlider.addEventListener('input', () => {
                 document.getElementById('snowTypeValue').textContent = snowTypes[snowSlider.value - 1];
             });
 
-            // Слайдер оценки
             const ratingSlider = document.getElementById('rating');
             const ratingValue = document.getElementById('ratingValue');
-            ratingSlider.addEventListener('input', () => {
-                ratingValue.textContent = ratingSlider.value;
-            });
+            ratingSlider.addEventListener('input', () => { ratingValue.textContent = ratingSlider.value; });
 
-            // Спойлер
             document.getElementById('toggleDetails').addEventListener('click', function() {
                 const section = document.getElementById('detailsSection');
                 section.classList.toggle('hidden');
@@ -443,24 +450,24 @@
                     const isCustomNameId = `layer${i}IsCustomName`;
                     
                     container.innerHTML += `
-                        <div class="border rounded-xl p-3 mb-3 bg-gray-50">
+                        <div class="border rounded-xl p-2 sm:p-3 mb-3 bg-gray-50">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="font-medium text-sm layer-header">${layerLabel}</span>
                                 ${i > 0 ? `<button type="button" class="remove-layer text-red-500 text-sm" data-index="${i}">✕</button>` : ''}
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div class="relative">
-                                    <input type="text" id="${brandInputId}" placeholder="Бренд" class="layer-brand border rounded-lg p-2" autocomplete="off">
+                                    <input type="text" id="${brandInputId}" placeholder="Бренд" class="layer-brand border rounded-lg p-2 w-full" autocomplete="off">
                                     <input type="hidden" id="${brandIdId}"><input type="hidden" id="${isCustomBrandId}" value="false">
                                     <div id="${brandSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                                 </div>
                                 <div class="relative">
-                                    <input type="text" id="${nameInputId}" placeholder="Название" class="layer-name border rounded-lg p-2" autocomplete="off">
+                                    <input type="text" id="${nameInputId}" placeholder="Название" class="layer-name border rounded-lg p-2 w-full" autocomplete="off">
                                     <input type="hidden" id="${nameIdId}"><input type="hidden" id="${isCustomNameId}" value="false">
                                     <div id="${nameSuggestionsId}" class="absolute z-40 w-full bg-white border rounded-xl shadow-lg mt-1 hidden max-h-60 overflow-y-auto"></div>
                                 </div>
-                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2">
-                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2">
+                                <input type="text" placeholder="Диапазон (-2/-8)" class="layer-range border rounded-lg p-2 w-full">
+                                <input type="text" placeholder="Примечание" class="layer-notes border rounded-lg p-2 w-full">
                             </div>
                         </div>
                     `;
@@ -709,7 +716,6 @@
                 setTimeout(() => window.location.href = 'index.html', 1000);
             });
 
-            // Инициализация
             checkAuth().then(isAuth => {
                 if (isAuth) {
                     renderLayers();
